@@ -1,5 +1,8 @@
-/* Ask the user to enter two numbers. Add them together and display the answer as */
-/* The answer is [answer] */
+/* Ask the user to enter two numbers. Add them together and display the answer as 
+The answer is [answer] */
+
+// 30.5.2022
+// Helgi Páll Jónsson
 
 #include<stdio.h>
 

@@ -1,5 +1,8 @@
-/* Ask for the users first name and then ask for their */
-/* and display the output message Hello [First Name] [Surname] */
+/* Ask for the users first name and then ask for their 
+and display the output message Hello [First Name] [Surname] */
+
+// 30.5.2022
+// Helgi Páll Jónsson
 
 #include<stdio.h>
 int main(void){

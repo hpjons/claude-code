@@ -1,6 +1,9 @@
-/* There are 2,204 pounds in a kilogram. Ask the */
-/* user to enter weight in kilograms and convert it */
-/* to pounds */
+/* There are 2,204 pounds in a kilogram. Ask the 
+user to enter weight in kilograms and convert it 
+to pounds */
+
+// 31.5.2022
+// Helgi Páll Jónsson
 
 #include<stdio.h>
 

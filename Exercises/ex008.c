@@ -1,6 +1,9 @@
-/* Ask for the total price of the bill. */
-/* Divide the total bill by the number of */
-/* diners and show how much each person must pay */
+/* Ask for the total price of the bill. 
+Divide the total bill by the number of 
+diners and show how much each person must pay */
+
+// 31.5.2022
+// Helgi Páll Jónsson
 
 #include<stdio.h>
 int main(void){

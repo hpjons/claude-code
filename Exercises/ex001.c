@@ -1,9 +1,17 @@
-#include<iostream>
-using namespace std;
+/* Ask for the user's first name and display the output message
+Hello [First Name] */
 
-int main(void){
+// 30.5.2022
+// Helgi Páll Jónsson
 
-  cout << Hello World! << endl;
-  return 0;
+#include<stdio.h>
+int main(){
+
+    char name[30];
+    printf("What is your name : ");
+    scanf("%s", name);
+    printf("Hello %s", name);
+
+    return 0;
 
 }

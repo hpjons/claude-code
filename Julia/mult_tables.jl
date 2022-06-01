@@ -1,3 +1,7 @@
+# Skrifað 13.5.2022
+# Helgi Páll Jónsson
+# Forritunarmál: Julia
+
 println("FARGMÖLDUNARTÖFLAN")
 println("==================")
 for i in 1:10

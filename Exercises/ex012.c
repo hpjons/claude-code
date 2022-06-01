@@ -7,6 +7,9 @@ number, otherwise show
 the first number first and
 then the second */
 
+// 31.5.2022
+// Helgi Páll Jónsson
+
 #include<stdio.h>
 
 int main(void){

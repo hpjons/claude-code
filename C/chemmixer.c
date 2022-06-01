@@ -1,7 +1,10 @@
+// maí 2022
+// Helgi Páll Jónsson
+
 #include<stdio.h>
 #include<math.h>
 int main(void){
-
+    
     float chem1, chem2, total, volume, prop_chem1, prop_chem2;
 
     printf("Hlutfall efnis 1 : ");

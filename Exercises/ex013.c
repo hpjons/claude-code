@@ -10,7 +10,7 @@ int main(void) {
   int number;
   
   print("Enter a number under 20 : ");
-  scanf("%d", number);
+  scanf("%d", &number);
   
   if (number > 20) {
     printf("Too high\n");

@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Spyder Editor
-
-This is a temporary script file.
-"""
-
 # Höf: Helgi Páll Jónsson
 # Dags: 6.10.2022
 

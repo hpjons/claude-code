@@ -1,0 +1,27 @@
+= setup automatic updates =
+apt install unattended-upgrades
+dpkg-reconfigure --priority=low unattended-upgrades
+
+= create a new user =
+adduser helgi
+usermod -aG sudo helgi
+
+= logga út og logga inn aftur með user =
+ssh helgi@192.168.1.222
+
+= nú þarf að búa til public/private key pair =
+mkdir ~/.ssh && chmod 700 ~/.ssh (linux server)
+logout (af linux server)
+
+c:\Users\helgi
+ssh-keygen -b 4096
+cd .ssh (tékka á hvort allt hafi ekki gengið að óskum)
+# Uplóda public key á linux serverinn
+# Á Windows
+scp $env:USERPROFILE/.ssh/id_rsa.pub helgi@192.168.1.222:~/.ssh/auhorized_keys
+# Linux
+ssh-copy-id helgi@192.168.1.222
+
+= koma í veg fyrir login á servernum
+sudo nano /etc/ssh/sshd_config
+Breyta Port 22 t.d. í 717

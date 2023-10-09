@@ -12,6 +12,6 @@ Python er túlkað, æðra forritunarmál (high-level language) og sérstaklega 
 
 ### Fyrsta Python forritið
 
-``Python
+```Python
 print("Halló heimur")
-``
+```

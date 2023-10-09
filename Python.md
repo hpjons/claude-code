@@ -31,8 +31,74 @@ C er reyndar annað eldra og mjög öflugt forritunarmál en Python og C tengjas
 
 C er orðið um 50 ára gamalt og var upphaflega þróað samhliða Unix stýrikerfinu sem var mikil bylting á tölvusviðinu og Unix stýrikerfið er allt skrifað í C. C er einkar hentugt mál til að skrifa stýrikerfi og forrita örgjörva og smátölvur því það er það forritunarmál sem næst kemst vélbúnaðinum fyrir utan smalamál (assembly) sem er mun stirðara og óþægilegra í notkun. C er þýtt (compiled) forritunarmál og gríðarlega hraðskreitt, en Python er túlkað (interpreted) og mun hægvirkara. Við munum síðar kíkja á C (og systurmál þess C++) samhliða skoðun á Arduino örtölvunni en hér munum við fyrst um sinn einbeita okkur að Python.
 
-
-
-
 **Æfing 1**
+Notaðu Python til að skrifa nafnið þitt með print() skipuninni.
+
+### Breyturskilgreiningar og breytugerðir
+
+Breytur eru geymslusvæði (í minni tölvunnar) fyrir gögn sem unnið er með. Python inniheldur nokkrar breytugerðir eins og heiltölubreytur (integer), fleytitölubreytur (float), strengbreytur (string) og rökbreytur (boolean).
+
+```Python
+aldur = 30 # heiltala
+haed = 1.80 # fleytitala
+nafn = "Anna" # textastrengur
+frost_uti = True # rökbreyta (satt eða ósatt)
+```
+
+**Æfing 2**
+Búðu til breytur sem geyma upplýsingar um aldur þinn, nafnið þitt og upplýsingar um hvort það sé satt eða ósatt að þér finnist Python skemmtilegt forritunarmál.
+
+### Reikniaðgerðir strengjaaðferðir
+
+Python styður reikniaðgerðirnar fjórar (+, -, *, /) og kann einnig að meðhöndla strengbreytur.
+
+```Python
+# Reikniaðgerðir
+samlagning = 3 + 7
+fradrattur = 10 - 3
+margfoldun = 4 * 5
+deiling = 20 / 4
+
+# Strengjaaðgerðir
+kvedja = "Halló" + " " + "heimur" 
+hlatur = "Ha" * 3
+```
+**Æfing 3**
+Skrifaðu tvö Python forrit sem 
+a) reiknar flatarmál ferhyrnings
+b) reiknar flatarmál rafmagnsvírs
+
+### Flæðistjórnun og ákvörðunartaka
+
+`if`, `elif` og `else` lykilorðin eru innbyggð í Python og hjálpa til við að taka ákvarðanir í forritum. 
+
+<u>ATH! Inndráttur setninga er mjög mikilvægur í Python og málið er mjög strangt á því að réttum inndrætti sé fylgt. Ef það er ekki gert þá kvartar túlkurinn og flytur villuskilaboð. Flest nýrri umhverfi og textaritlar sjá að mestu um þennan inndrátt. Margir telja þetta einn helsta kostinn við Python að málið neyðir forritarann til að skrifa læsileg forrit. Aðrir telja þetta mjög hamlandi. Hvað sem því líður þá þarf að gæta vel að því að inndrátturinn sé réttur</u> 
+
+```Python
+x = 10
+if x > 5:
+    print("x er stærra en 5")
+elif x == 5:
+    print("x er jafnt og 5")
+else:
+    print("x er minna en 5")
+```
+
+### Lykkjur
+
+Lykkjur eru eitt af því sem gerir forritun og tölvur jafn öflugar og raun ber vitni, eða hæfileiki tölva til að endurtaka aðgerðir mjög hratt. Python hefur yfir að ráða tveimur gerðum af lykkjum `for` og `while`. 
+
+```Python
+# For lykkjan
+for i in range(5):
+    print(i)
+
+# While lykkjan
+teljari = 0
+while teljari < 5:
+    print(count)
+    count += 1
+```
+**Æfing 5**
+Skrifaðu forrit sem að prentar út 7-sinnum töfluna með því að nota lykkju.
 

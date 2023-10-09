@@ -12,7 +12,7 @@ s5 = 0
 s6 = 0
 
 # Hér er sett inn hversu oft teningi skal kastað
-numberOfThrows = 6
+numberOfThrows = 10000000
 
 for i in range(numberOfThrows):
     coin_sides = [1,2,3,4,5,6]

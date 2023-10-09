@@ -7,5 +7,5 @@ float main()
 
 int skrifastaf(void)
 {
-    printf("%")
+    printf("%");
 }

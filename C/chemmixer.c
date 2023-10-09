@@ -1,5 +1,5 @@
-// maí 2022
-// Helgi Páll Jónsson
+// maĂ­ 2022
+// Helgi PĂĄll JĂłnsson
 
 #include<stdio.h>
 #include<math.h>
@@ -19,7 +19,7 @@ int main(void){
     prop_chem1 = (volume/total) * chem1;
     prop_chem2 = (volume/total) * chem2;
 
-    printf("\nÞú blandar saman í eftirfarandi hlutföllum:\n");
+    printf("\nÞú blandar saman í­ eftirfarandi hlutföllum:\n");
     printf("Efni 1 samtals : %f\n", prop_chem1);
     printf("Efni 2 samtals : %f\n", prop_chem2);
 

@@ -10,7 +10,7 @@ Python er túlkað, æðra forritunarmál (high-level language) og sérstaklega 
 
 * Samfélag og leiðbeiningar: Mjög stórt samfélag er til í kringum Python á vefnum og mikið til af hjálpargögnum og leiðbeiningum.
 
-### Fyrsta Python forritið
+### Fyrsta Python forritið og samanburður við C
 
 Hér er dæmi um Python forrit sem prentar Halló heimur út á skjáinn.
 

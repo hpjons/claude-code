@@ -29,7 +29,7 @@ int main()
 ```
 C er reyndar annað eldra og mjög öflugt forritunarmál en Python og C tengjast nánum böndum því Python málið er skrifað í C.
 
-C er orðið um 50 ára gamalt og var upphaflega þróað samhliða Unix stýrikerfinu sem var mikil bylting á tölvusviðinu og Unix stýrikerfið er allt skrifað í C. C er einkar hentugt mál til að skrifa stýrikerfi og forrita örgjörva og smátölvur því það er það forritunarmál sem næst kemst vélbúnaðinum fyrir utan smalamál (assembly) sem er mun stirðara og óþægilegra í notkun. Við munum síðar kíkja á C (og systurmál þess C++) samhliða skoðun á Arduino örtölvunni en hér munum við fyrst um sinn einbeita okkur að Python.
+C er orðið um 50 ára gamalt og var upphaflega þróað samhliða Unix stýrikerfinu sem var mikil bylting á tölvusviðinu og Unix stýrikerfið er allt skrifað í C. C er einkar hentugt mál til að skrifa stýrikerfi og forrita örgjörva og smátölvur því það er það forritunarmál sem næst kemst vélbúnaðinum fyrir utan smalamál (assembly) sem er mun stirðara og óþægilegra í notkun. C er þýtt (compiled) forritunarmál og gríðarlega hraðskreitt, en Python er túlkað (interpreted) og mun hægvirkara. Við munum síðar kíkja á C (og systurmál þess C++) samhliða skoðun á Arduino örtölvunni en hér munum við fyrst um sinn einbeita okkur að Python.
 
 
 

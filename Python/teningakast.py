@@ -1,6 +1,6 @@
-# Teningakast
-# 19.2.2023
-# Helgi Páll Jónsson
+// Teningakast
+// 19.2.2023
+// Helgi Páll Jónsson
 
 import random
 

@@ -84,6 +84,8 @@ elif x == 5:
 else:
     print("x er minna en 5")
 ```
+**Æfing 4**
+Skrifaðu forrit sem athugar hvort að tala sé jákvæð, neikvæð eða núll.
 
 ### Lykkjur
 
@@ -103,3 +105,22 @@ while teljari < 5:
 **Æfing 5**
 Skrifaðu forrit sem að prentar út 7-sinnum töfluna með því að nota lykkju.
 
+### Föll
+Föll eru forritsblokkir sem eiga að framkvæma ákveðið verk. Þegar þú þarft vinna ákveðið verk geturðu skrifað fall sem þú getur svo alltaf kallað í aftur of aftur í forritinu.
+
+```Python
+# Fallið skilgreint
+def heilsa():
+    print("Komdu sæll Python forritari!")
+
+# Kallað í fallið
+heilsa()
+```
+**Æfing 6**
+Búðu til fall sem að tekur inn nafn sem færibreytu (parameter) og prentar svo út kveðju.
+
+**Stærra verkefni**
+Búðu til Python forrit sem að umbreytir hitastigi úr selsíus kvarðanum og yfir í fahrenheit og öfugt
+
+$C = (F-32)\times \frac{5}{9}$
+$F = (C \times \frac{9}{5}+32$

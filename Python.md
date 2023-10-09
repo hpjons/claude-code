@@ -123,4 +123,5 @@ Búðu til fall sem að tekur inn nafn sem færibreytu (parameter) og prentar sv
 Búðu til Python forrit sem að umbreytir hitastigi úr selsíus kvarðanum og yfir í fahrenheit og öfugt
 
 $C = (F-32)\times \frac{5}{9}$
-$F = (C \times \frac{9}{5}+32$
+
+$F = (C \times \frac{9}{5})+32$

@@ -72,7 +72,7 @@ b) reiknar flatarmál rafmagnsvírs
 
 `if`, `elif` og `else` lykilorðin eru innbyggð í Python og hjálpa til við að taka ákvarðanir í forritum. 
 
-> **Warning**
+> **Viðvörun**
 Inndráttur setninga er mjög mikilvægur í Python og málið er mjög strangt á því að réttum inndrætti sé fylgt. Ef það er ekki gert þá kvartar túlkurinn og flytur villuskilaboð. Flest nýrri umhverfi og textaritlar sjá að mestu um þennan inndrátt. Margir telja þetta einn helsta kostinn við Python að málið neyðir forritarann til að skrifa læsileg forrit. Aðrir telja þetta mjög hamlandi. Hvað sem því líður þá þarf að gæta vel að því að inndrátturinn sé réttur</u> 
 
 ```Python

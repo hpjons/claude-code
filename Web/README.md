@@ -6,6 +6,8 @@ Allskonar tól og tæki eru til í dag til að einfalda vefsíðugerð og til he
 
 Þegar vefur er gerður þá er nauðsynlegt og allra mikilvægast af öllu að hafa efni til að koma á framfæri. Hér ráðið þið efnisvali, þið gætuð gert kynningu á ykkur sjálfum og helstu áhugamálum, nú eða fundið annað efni ef þið hafið aðrar hugmyndir.
 
+## 1. Textaritill
+
 Finnið textaritil (text editor) til að vinna með. Textaritlar vinna með hreinan texta, en tekið skal fram að forrit eins og Word gera það ekki. Afar margir ritlar eru til og margir hverjir eru opin og frír hugbúnaður. Hér er listi yfir nokkra þekkta og mikið notaða textaritla.
 
 * **Visual Studio Code** (Windows, MacOS, Linux)
@@ -18,6 +20,8 @@ Finnið textaritil (text editor) til að vinna með. Textaritlar vinna með hrei
     - Þessi eldgamli góði sem kemur með Windows / Lokaður hugbúnaður
 * **Vim og Emacs** (MacOS, Windows, Linux)
     - Flóknir en mjög öflugir ritlar sem vinna í skipanalínunni. Aðallega notaðir af forriturum á Linux tölvum. (EKKI MÆLT MEÐ FYRIR BYRJENDUR)
+
+## 2. Vefsíða
 
 Þegar þú hefur fundið textaritil við hæfi þá skaltu gera eftirfarandi:
 

@@ -1,4 +1,4 @@
-# Notkun HTML við gerð vefsíðu.
+## Veftækni. Stutt kynning á notkun HTML við gerð vefsíðu.
 
 Í þessu verkefni ætlum við að búa til vinna með vefinn sjálfann og skoða hvað er á bakvið vefsíður í grunninn og skoða einnig vinnslu með hreinum texta í textaritli (text editor).
 
@@ -25,7 +25,7 @@ Finnið textaritil (text editor) til að vinna með. Textaritlar vinna með hrei
 
 1. Búðu til möppu, t.d. á skjáborðinu sem að heitir t.d. **WWW** eða **Vefur**.
 
-2. Opnaðu textaritilinn og búðu til nýja skrá sem heitir index.html og vistaðu hana í möppunni. Hér göngum við út frá því að við séum að skrifa kynningu á okkur sjálfum og skrifum eftirfarandi í skránna:
+2. Opnaðu textaritilinn og búðu til nýja skrá sem heitir `index.html` og vistaðu hana í möppunni.
 
 ```html
 <!DOCTYPE html>
@@ -38,7 +38,7 @@ Finnið textaritil (text editor) til að vinna með. Textaritlar vinna með hrei
 </body>
 </html>
 ```
-Þetta er HTML skriftarmálið sem þú ert að nota en það byggir á tögum (tags) sem segja til um hvernig eigi að forsníða textann á síðunni. Allar vefsíður verða að hafa `<html>`, `<head>` og `<body>` tögin. 
+Þetta er HTML skriftarmálið sem þú ert að nota en það byggir á tögum (tags) sem segja til um hvernig eigi að forsníða textann á síðunni. Yfirleitt opnast tög `<>` og svo er þeim lokað `</>` Allar vefsíður verða að hafa `<html>`, `<head>` og `<body>` tögin. 
 
 3. Inn í `<body>` tagið skaltu bæta við `<h1>` (heading 1) taginu og skrifa þar t.d. nafnið þitt:
 
@@ -50,7 +50,7 @@ Finnið textaritil (text editor) til að vinna með. Textaritlar vinna með hrei
 
 Vistaðu skrána.
 
-4. Síðan skaltu nota `<p>` tagið til þess að til að búa til málsgrein:
+4. Síðan skaltu nota `<p>` (paragraph) tagið til þess að til að búa til málsgrein:
 
 ```html
 <p>Hér er ég að búa til feykilega spennandi vefsíðu og mig hlakkar til þegar hún verður tilbúin.</p>
@@ -78,13 +78,27 @@ Vistaðu skrána
 <img src="nafn-a-mynd.jpg" alt="Lýsing á mynd">
 ```
 
+Einnig má setja inn tengil á mynd á vefnum þannig
+
+```html
+<img src="https://www.fnv.is/static/themes/2016/images/logo.png?v=6a1bec472a">
+```
+
 Vistaðu skrána.
 
 7. Nú er lokaprófun eftir. Opnaðu forritið í vefskoðara til þess að sjá hvernig hún myndi líta út á vefnum. Athugaðu hvort allt sé eins og þú vilt hafa það.
 
-8. Reyndu nú að breyta, bæta við og setja inn eitthvað fleira. Notaðu hugmyndaflugið. Kíktu á síðu eins og w3schools á vefnum til að læra meira, fikta og fá hugmyndir. Prófaðu t.d. að setja inn 
+8. Farðu á vefsíðuna <a href="https://www.w3schools.com/">**w3schools**</a> og skoðaðu þig um. Þessi síða er afar gagnleg til að læra allskonar veftækni. Svaraðu eftirfarandi spurningum með hjálp síðunnar.
+
+- Hvað er CSS?
+
+- Hvað er Javascript?
+
+9. Reyndu nú að breyta, bæta við og setja inn eitthvað fleira. Notaðu hugmyndaflugið. Kíktu á síðu eins og w3schools á vefnum til að læra meira, fikta og fá hugmyndir. Prófaðu t.d. að setja inn 
 
 * Töflu
 * Tengil í aðra vefsíðu eða tengil á mynd
 * Breyttu lit á texta (þar kemur inn sextándakerfið)
 * o.fl. sem þér dettur í hug.
+
+**Skilaðu endanlegri textaskrá `index.html` í skilakassann á Moodle**

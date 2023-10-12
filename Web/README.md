@@ -2,7 +2,7 @@
 
 Í þessu verkefni ætlum við að búa til vinna með vefinn sjálfann og skoða hvað er á bakvið vefsíður í grunninn og skoða einnig vinnslu með hreinum texta í textaritli (text editor).
 
-Allskonar tól og tæki eru til í dag til að einfalda vefsíðugerð og til heilu vefumsjónarkerfin. En á bakvið vefsíður er alltaf í grunninn skriftarmálið HTML sem lesið er af staðlinum HTTP (Hypertext Transfer Protocol). En hér ætlum við að gera þetta handvirkt og skrifa HTML beint í textaritil, en áður en fínni tól komu til sögunnar voru fyrstu vefsíðurnar allar smíðaðar þannig.
+Allskonar tól og tæki eru til í dag til að einfalda vefsíðugerð og til heilu vefumsjónarkerfin. En á bakvið vefsíður er alltaf í grunninn skriftarmálið HTML sem lesið er af staðlinum HTTP (Hypertext Transfer Protocol) sem er innbyggður í vefskoðara. En hér ætlum við að gera þetta handvirkt og skrifa HTML beint í textaritil, en áður en fínni tól komu til sögunnar voru fyrstu vefsíðurnar allar smíðaðar þannig.
 
 Þegar vefur er gerður þá er nauðsynlegt og allra mikilvægast af öllu að hafa efni til að koma á framfæri. Hér ráðið þið efnisvali, þið gætuð gert kynningu á ykkur sjálfum og helstu áhugamálum, nú eða fundið annað efni ef þið hafið aðrar hugmyndir.
 

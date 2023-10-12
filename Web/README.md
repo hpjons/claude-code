@@ -1,6 +1,6 @@
 # Notkun HTML við gerð vefsíðu.
 
-Í þessu verkefni ætlum við að búa til vinna með vefinn sjálfann og skoða hvað er á bakvið vefsíður í grunninn og skoða einnig vinnslu með hreinum texta í textaritli.
+Í þessu verkefni ætlum við að búa til vinna með vefinn sjálfann og skoða hvað er á bakvið vefsíður í grunninn og skoða einnig vinnslu með hreinum texta í textaritli (text editor).
 
 Allskonar tól og tæki eru til í dag til að einfalda vefsíðugerð og til heilu vefumsjónarkerfin. En á bakvið vefsíður er alltaf í grunninn skriftarmálið HTML sem lesið er af staðlinum HTTP (Hypertext Transfer Protocol). En hér ætlum við að gera þetta handvirkt og skrifa HTML beint í textaritil, en áður en fínni tól komu til sögunnar voru fyrstu vefsíðurnar allar smíðaðar þannig.
 

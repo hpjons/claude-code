@@ -10,9 +10,9 @@ Allskonar tól og tæki eru til í dag til að einfalda vefsíðugerð og til he
 
 Finnið textaritil (text editor) til að vinna með. Textaritlar vinna með hreinan texta, en tekið skal fram að forrit eins og Word gera það ekki. Afar margir ritlar eru til og margir hverjir eru opin og frír hugbúnaður. Hér er listi yfir nokkra þekkta og mikið notaða textaritla.
 
-* **Visual Studio Code** (Windows, MacOS, Linux)
+* **<a href="https://code.visualstudio.com/">Visual Studio Code</a>** (Windows, MacOS, Linux)
     - Afar vinsæll og mjög fullkominn / Opin hugbúnaður
-* **Notepad++** (Windows)
+* **<a href="https://notepad-plus-plus.org/">Notepad++</a>** (Windows)
     - Mjög fullkominn og endurbættur Notepad / Opin hugbúnaður
 * **TextEdit** (MacOS) 
     - Staðalbúnaður í MacOS / Lokaður hugbúnaður

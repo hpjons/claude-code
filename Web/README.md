@@ -25,7 +25,7 @@ Finnið textaritil (text editor) til að vinna með. Textaritlar vinna með hrei
 
 1. Búðu til möppu, t.d. á skjáborðinu sem að heitir t.d. **WWW** eða **Vefur**.
 
-2. Opnaðu textaritilinn og búðu til nýja skrá sem heitir `index.html` og vistaðu hana í möppunni.
+2. Opnaðu textaritilinn og búðu til nýja skrá í möppunni þinni sem heitir `index.html` og vistaðu hana í möppunni.
 
 ```html
 <!DOCTYPE html>

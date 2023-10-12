@@ -38,7 +38,7 @@ Finnið textaritil (text editor) til að vinna með. Textaritlar vinna með hrei
 </body>
 </html>
 ```
-Þetta er HTML skriftarmálið sem þú ert að nota en það byggir á tögum (tags) sem segja til um hvernig eigi að forsníða textann á síðunni. Yfirleitt opnast tög `<>` og svo er þeim lokað `</>` Allar vefsíður verða að hafa `<html>`, `<head>` og `<body>` tögin. 
+Þetta er HTML skriftarmálið sem þú ert að nota en það byggir á tögum (tags) sem segja til um hvernig eigi að forsníða textann á síðunni. Yfirleitt opnast tög `<>` og svo er þeim lokað `</>`. Allar vefsíður verða að hafa `<html>`, `<head>` og `<body>` tögin. 
 
 3. Inn í `<body>` tagið skaltu bæta við `<h1>` (heading 1) taginu og skrifa þar t.d. nafnið þitt:
 
@@ -53,7 +53,7 @@ Vistaðu skrána.
 4. Síðan skaltu nota `<p>` (paragraph) tagið til þess að til að búa til málsgrein:
 
 ```html
-<p>Hér er ég að búa til feykilega spennandi vefsíðu og mig hlakkar til þegar hún verður tilbúin.</p>
+<p>Það er rosalega gaman í TNTÆ1 því maður fær að gera svona spennandi vefsíður.</p>
 ```
 
 Vistaðu skrána.

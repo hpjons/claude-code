@@ -18,8 +18,6 @@ Finnið textaritil (text editor) til að vinna með. Textaritlar vinna með hrei
     - Staðalbúnaður í MacOS / Lokaður hugbúnaður
 * **Notepad** (Windows)
     - Staðalbúnaður í Windows / Lokaður hugbúnaður
-* **Vim og Emacs** (MacOS, Windows, Linux) / Opin hugbúnaður
-    - Flóknir en mjög öflugir ritlar sem vinna í skipanalínunni. Aðallega notaðir af forriturum á Linux tölvum. (EKKI MÆLT MEÐ FYRIR BYRJENDUR)
 
 ## 2. Vefsíða
 

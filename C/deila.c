@@ -3,7 +3,7 @@ int main()
 {
   int i;
 
-  for (i = 1996; i <= 2021; i++) {
+  for (i = 1996; i <= 2030; i++) {
     if (i % 4 == 0)
     {
       printf("%i hlaupár \n", i);

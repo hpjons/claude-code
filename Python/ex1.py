@@ -1,16 +1,8 @@
-import matplotlib.pyplot as plt
-import numpy as np
+celsius = -273
+while celsius <= 30:
+    kelvin = celsius + 273.15
+    fahrenheit = (9.0/5.0) * celsius + 32
 
+    print(f'{celsius:.1f} ˚C \t {kelvin:.1f} K \t {fahrenheit:.1f} ˚F')
+    celsius += 1
 
-g = 9.8
-
-x = []
-y = []
-
-for l in range(1,5000):
-  T = 2 * np.pi * np.sqrt(l/g)
-  y.append(T)
-  x.append(l)
-
-plt.plot(x,y)
-plt.show()

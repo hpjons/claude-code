@@ -1,4 +1,9 @@
 h1,h2,h3,h4 {
-	font-family: Ubuntu;
+	font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 	color: brown;
+}
+
+p {
+	font-family: 'Trebuchet MS';
+	color: black;
 }

@@ -1,7 +1,0 @@
-Skrifaði þetta frábæra skjal í VSCode.
-
-Núna bæti ég við línu
-Og annarri línu
-
-Og einni hérna líka.
-

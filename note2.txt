@@ -1,8 +1,0 @@
-VSCode output glugginn tekur ekki við inntaki.
-Lausnin er þessi:
-
-fara í  VS CODE SETTINGS.
-
-skrifa í search bar, CODE RUNNER TERMINAL
-
-Haka í Run in Terminal boxið. Komið!!

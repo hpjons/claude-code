@@ -22,6 +22,9 @@ msgstr "óvænt tákn %q á stöðu %d"
 msgid "missing closing parenthesis"
 msgstr "vantar lokandi sviga"
 
+msgid "expected ')' but found %q at position %d"
+msgstr "bjóst við ')' en fann %q á stöðu %d"
+
 msgid "unexpected end of expression"
 msgstr "óvænt endalok segðar"
 

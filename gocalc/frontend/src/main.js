@@ -1,7 +1,11 @@
 const historyEl = document.getElementById('history');
 const inputEl = document.getElementById('expr-input');
 
-const ANS_TRIGGER_OPERATORS = ['+', '-', '*', '/', '^', '%'];
+// Typing one of these into an empty input prefixes it with "ans", so
+// "* 2" continues from the previous result. '-' is deliberately excluded:
+// a leading minus almost always starts a negative number (e.g. "-5 + 3"),
+// and "ans-…" can still be typed explicitly.
+const ANS_TRIGGER_OPERATORS = ['+', '*', '/', '^', '%'];
 
 let commandHistory = [];
 let historyPos = 0;

@@ -55,3 +55,14 @@ func TestWrapErrUnknownPassesThrough(t *testing.T) {
 		t.Errorf("WrapErr() = %q, want passthrough", err.Error())
 	}
 }
+
+func TestTIcelandicExpectedRParen(t *testing.T) {
+	catalog = loadIcelandicCatalog(t)
+	defer func() { catalog = nil }()
+
+	got := T("expected ')' but found %q at position %d", "3", 5)
+	want := `bjóst við ')' en fann "3" á stöðu 5`
+	if got != want {
+		t.Errorf("T() = %q, want %q", got, want)
+	}
+}

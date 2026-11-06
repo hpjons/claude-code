@@ -49,6 +49,21 @@ func (p *Parser) advance() Token {
 	return tok
 }
 
+// expectRParen consumes a closing parenthesis, or reports what was found
+// instead so the user can see which token broke the expression.
+func (p *Parser) expectRParen() error {
+	tok := p.peek()
+	switch tok.Type {
+	case TokenRParen:
+		p.advance()
+		return nil
+	case TokenEOF:
+		return i18n.Errorf("missing closing parenthesis")
+	default:
+		return i18n.Errorf("expected ')' but found %q at position %d", tok.Value, tok.Pos)
+	}
+}
+
 func binaryInfo(t TokenType) (prec int, rightAssoc bool, ok bool) {
 	switch t {
 	case TokenPlus, TokenMinus:
@@ -121,10 +136,9 @@ func (p *Parser) parsePrimary() (Node, error) {
 		if err != nil {
 			return nil, err
 		}
-		if p.peek().Type != TokenRParen {
-			return nil, i18n.Errorf("missing closing parenthesis")
+		if err := p.expectRParen(); err != nil {
+			return nil, err
 		}
-		p.advance()
 		return inner, nil
 	case TokenIdent:
 		p.advance()
@@ -136,10 +150,9 @@ func (p *Parser) parsePrimary() (Node, error) {
 		if err != nil {
 			return nil, err
 		}
-		if p.peek().Type != TokenRParen {
-			return nil, i18n.Errorf("missing closing parenthesis")
+		if err := p.expectRParen(); err != nil {
+			return nil, err
 		}
-		p.advance()
 		return &CallNode{Name: tok.Value, Arg: arg}, nil
 	case TokenEOF:
 		return nil, i18n.Errorf("unexpected end of expression")

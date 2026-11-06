@@ -2,6 +2,7 @@ package engine
 
 import (
 	"math"
+	"strconv"
 
 	"github.com/cockroachdb/apd/v3"
 
@@ -25,35 +26,105 @@ var decimalFunctions = map[string]func(ctx *apd.Context, d, x *apd.Decimal) (apd
 	"exp":  (*apd.Context).Exp,
 }
 
-// float64Functions are single-argument functions with no practical pure
-// decimal implementation; they're computed via float64, trading arbitrary
-// precision for feasibility. Inverse trig functions are named arcsin/
-// arccos/arctan rather than SpeedCrunch's asin/acos/atan, per preference.
-var float64Functions = map[string]func(float64) float64{
-	"sin":    math.Sin,
-	"cos":    math.Cos,
-	"tan":    math.Tan,
-	"arcsin": math.Asin,
-	"arccos": math.Acos,
-	"arctan": math.Atan,
+// float64Function is a single-argument function with no practical pure
+// decimal implementation; it's computed via float64, trading arbitrary
+// precision for feasibility.
+type float64Function struct {
+	fn func(float64) float64
+	// periodic marks sin/cos/tan: their output error tracks the argument's
+	// float64 conversion error (slope near zero crossings is ~1), so
+	// results inside that error are snapped to zero, and the result is
+	// rejected outright once the argument error is large.
+	periodic bool
 }
 
-func evalFloatFunc(name string, fn func(float64) float64, arg *apd.Decimal) (*apd.Decimal, error) {
-	f, err := arg.Float64()
-	if err != nil {
+// float64Functions maps function names to their float64 implementations.
+// Inverse trig functions are named arcsin/arccos/arctan rather than
+// SpeedCrunch's asin/acos/atan, per preference.
+var float64Functions = map[string]float64Function{
+	"sin":    {math.Sin, true},
+	"cos":    {math.Cos, true},
+	"tan":    {math.Tan, true},
+	"arcsin": {math.Asin, false},
+	"arccos": {math.Acos, false},
+	"arctan": {math.Atan, false},
+}
+
+// float64SignificantDigits is how many significant digits a float64-based
+// function result is rounded to. float64 carries ~15.95 decimal digits, so
+// anything past 15 is noise that would otherwise be displayed as if it
+// were exact.
+const float64SignificantDigits = 15
+
+// float64NoiseFactor scales the argument's float64 conversion error into
+// the threshold below which a sin/cos/tan result is treated as exactly
+// zero. For
+// example pi -> float64 is off by ~1.2e-16, so sin(pi) comes back as
+// ~1.2e-16 rather than 0; a result no bigger than the error carried in by
+// the argument holds no information. (|d/dx| of sin and cos is at most 1,
+// so the argument error bounds their output error.)
+const float64NoiseFactor = 4
+
+// maxPeriodicArgError is the largest float64 conversion error tolerated in
+// a sin/cos/tan argument. Beyond it (e.g. sin(10^100), where the nearest
+// float64 is off by ~10^84) the result would be arbitrary, so an error is
+// returned instead of a confident-looking wrong number.
+const maxPeriodicArgError = 1e-6
+
+func evalFloatFunc(ctx *apd.Context, name string, f float64Function, arg *apd.Decimal) (*apd.Decimal, error) {
+	x, err := arg.Float64()
+	if err != nil || math.IsInf(x, 0) {
 		return nil, i18n.Errorf("%s: argument out of range", name)
 	}
 
-	result := fn(f)
+	// argErr is how far the float64 argument is from the real decimal one.
+	argErr, err := float64ConversionError(ctx, arg, x)
+	if err != nil {
+		return nil, err
+	}
+	if f.periodic && argErr > maxPeriodicArgError {
+		return nil, i18n.Errorf("%s: argument out of range", name)
+	}
+
+	result := f.fn(x)
 	if math.IsNaN(result) || math.IsInf(result, 0) {
 		return nil, i18n.Errorf("%s: argument out of domain", name)
+	}
+	if f.periodic && math.Abs(result) <= float64NoiseFactor*argErr {
+		result = 0
 	}
 
 	res := new(apd.Decimal)
 	if _, err := res.SetFloat64(result); err != nil {
 		return nil, err
 	}
+	if _, err := apd.BaseContext.WithPrecision(float64SignificantDigits).Round(res, res); err != nil {
+		return nil, i18n.WrapErr(err)
+	}
 	return res, nil
+}
+
+// float64ConversionError returns |arg - x| where x is arg converted to
+// float64, computed in decimal against x's exact binary value.
+//
+// apd's SetFloat64 can't be used for x: it takes the shortest decimal that
+// round-trips (so float64(1e100) reads back as exactly 1e100, hiding a
+// ~1e84 error). Every float64 has a finite exact decimal expansion of at
+// most 767 significant digits, which 'e' with that precision yields.
+func float64ConversionError(ctx *apd.Context, arg *apd.Decimal, x float64) (float64, error) {
+	xDec, _, err := apd.NewFromString(strconv.FormatFloat(x, 'e', 767, 64))
+	if err != nil {
+		return 0, err
+	}
+	diff := new(apd.Decimal)
+	if _, err := ctx.Sub(diff, arg, xDec); err != nil {
+		return 0, i18n.WrapErr(err)
+	}
+	d, err := diff.Float64()
+	if err != nil {
+		return math.Inf(1), nil
+	}
+	return math.Abs(d), nil
 }
 
 // Evaluate parses and evaluates a single expression, returning a clean,
@@ -125,7 +196,7 @@ func eval(ctx *apd.Context, node Node, ans *apd.Decimal) (*apd.Decimal, error) {
 		}
 
 		if fn, ok := float64Functions[n.Name]; ok {
-			return evalFloatFunc(n.Name, fn, arg)
+			return evalFloatFunc(ctx, n.Name, fn, arg)
 		}
 
 		return nil, i18n.Errorf("unknown function %q", n.Name)

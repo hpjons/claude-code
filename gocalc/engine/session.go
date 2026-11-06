@@ -1,14 +1,12 @@
 package engine
 
-import "github.com/cockroachdb/apd/v3"
-
 // Session evaluates a sequence of expressions, making each successful
 // result available to the next one as "ans". The previous result is kept
 // as a decimal, so it's never formatted to text and parsed back.
 //
 // A Session is not safe for concurrent use.
 type Session struct {
-	ans *apd.Decimal // nil until the first successful evaluation
+	ans *value // nil until the first successful evaluation
 }
 
 // NewSession returns a Session with no previous result.
@@ -37,8 +35,8 @@ func (s *Session) Evaluate(expression string) (string, error) {
 		return "", err
 	}
 
-	s.ans = result
-	return formatDecimal(ctx, result), nil
+	s.ans = &result
+	return formatDecimal(result.d), nil
 }
 
 // Evaluate evaluates a single expression on its own, with no previous

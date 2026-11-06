@@ -1,246 +1,233 @@
 package engine
 
 import (
-	"math"
 	"math/big"
-	"strconv"
 
 	"github.com/cockroachdb/apd/v3"
 
 	"gocalc/i18n"
 )
 
-// piDigits is pi to more digits than defaultContext's precision, so it is
-// rounded rather than truncated short.
-const piDigits = "3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798"
+// workingPrecision is the number of significant digits every calculation
+// is carried out with. It's deliberately higher than displayPrecision:
+// the extra guard digits absorb rounding in intermediate steps, so e.g.
+// 1/3*3 and sin(2)^2 + cos(2)^2 display as exactly 1.
+const workingPrecision = 60
 
-// pi is piDigits rounded to defaultContext's precision, parsed once at
-// startup. eval hands out copies so no caller can mutate the shared value.
-var pi = func() *apd.Decimal {
-	d, _, err := defaultContext().NewFromString(piDigits)
-	if err != nil {
-		panic(err) // piDigits is a constant; this can't fail
-	}
-	return d
-}()
+// displayPrecision is the number of significant digits results are
+// rounded to for display (see formatDecimal).
+const displayPrecision = 50
 
-// defaultContext returns a fresh decimal context with enough precision for
-// a calculator REPL, matching standard calculator rounding behavior.
+// pi is π at working precision, computed once at startup. eval hands out
+// copies so no caller can mutate the shared value.
+var pi = piTo(workingPrecision)
+
+// defaultContext returns a fresh decimal context at working precision.
 func defaultContext() *apd.Context {
-	return apd.BaseContext.WithPrecision(50)
+	return apd.BaseContext.WithPrecision(workingPrecision)
 }
 
-// decimalFunctions are single-argument functions apd implements natively
-// at arbitrary precision, so no float64 round-trip is needed.
+// decimalFunctions are single-argument functions apd implements natively.
 var decimalFunctions = map[string]func(ctx *apd.Context, d, x *apd.Decimal) (apd.Condition, error){
 	"sqrt": (*apd.Context).Sqrt,
 	"exp":  (*apd.Context).Exp,
 }
 
-// float64Function is a single-argument function with no practical pure
-// decimal implementation; it's computed via float64, trading arbitrary
-// precision for feasibility.
-type float64Function struct {
-	fn func(float64) float64
-	// periodic marks sin/cos/tan: their output error tracks the argument's
-	// float64 conversion error (slope near zero crossings is ~1), so
-	// results inside that error are snapped to zero, and the result is
-	// rejected outright once the argument error is large.
-	periodic bool
+// trigFunctions are the trigonometric functions, computed in decimal at
+// working precision (see trig.go). Inverse functions are named arcsin/
+// arccos/arctan rather than SpeedCrunch's asin/acos/atan, per preference.
+var trigFunctions = map[string]func(x value) (*apd.Decimal, error){
+	"sin":    func(x value) (*apd.Decimal, error) { return periodic("sin", x) },
+	"cos":    func(x value) (*apd.Decimal, error) { return periodic("cos", x) },
+	"tan":    func(x value) (*apd.Decimal, error) { return periodic("tan", x) },
+	"arcsin": func(x value) (*apd.Decimal, error) { return arcsin(x.d) },
+	"arccos": func(x value) (*apd.Decimal, error) { return arccos(x.d) },
+	"arctan": func(x value) (*apd.Decimal, error) { return arctan(x.d) },
 }
 
-// float64Functions maps function names to their float64 implementations.
-// Inverse trig functions are named arcsin/arccos/arctan rather than
-// SpeedCrunch's asin/acos/atan, per preference.
-var float64Functions = map[string]float64Function{
-	"sin":    {math.Sin, true},
-	"cos":    {math.Cos, true},
-	"tan":    {math.Tan, true},
-	"arcsin": {math.Asin, false},
-	"arccos": {math.Acos, false},
-	"arctan": {math.Atan, false},
-}
+// periodicNoiseUlps is how many units in the last working digit a rounded
+// sin/cos/tan argument is assumed to be off by. It covers rounding that
+// builds up over a few operations, e.g. (pi/7)*7.
+const periodicNoiseUlps = 10
 
-// float64SignificantDigits is how many significant digits a float64-based
-// function result is rounded to. float64 carries ~15.95 decimal digits, so
-// anything past 15 is noise that would otherwise be displayed as if it
-// were exact.
-const float64SignificantDigits = 15
+// maxPeriodicNoise is the largest uncertainty tolerated in a rounded
+// sin/cos/tan argument. Beyond it (e.g. sin(2^200), whose 61-digit
+// argument had to be rounded to 60 digits) the result could be anything,
+// so an error is returned instead of a confident-looking wrong number.
+// Exact arguments, however large (10^100), are always computed.
+var maxPeriodicNoise = apd.New(1, -6)
 
-// float64NoiseFactor scales the argument's float64 conversion error into
-// the threshold below which a sin/cos/tan result is treated as exactly
-// zero. For
-// example pi -> float64 is off by ~1.2e-16, so sin(pi) comes back as
-// ~1.2e-16 rather than 0; a result no bigger than the error carried in by
-// the argument holds no information. (|d/dx| of sin and cos is at most 1,
-// so the argument error bounds their output error.)
-const float64NoiseFactor = 4
-
-// maxPeriodicArgError is the largest float64 conversion error tolerated in
-// a sin/cos/tan argument. Beyond it (e.g. sin(10^100), where the nearest
-// float64 is off by ~10^84) the result would be arbitrary, so an error is
-// returned instead of a confident-looking wrong number.
-const maxPeriodicArgError = 1e-6
-
-func evalFloatFunc(ctx *apd.Context, name string, f float64Function, arg *apd.Decimal) (*apd.Decimal, error) {
-	x, err := arg.Float64()
-	if err != nil || math.IsInf(x, 0) {
+// periodic evaluates sin, cos or tan of x.
+//
+// If x was rounded (x.inexact, as with pi or pi/2), it differs from the
+// value the user meant by a few units in its last working digit. sin and
+// cos change by at most that much, so a sin or cos smaller than it is
+// indistinguishable from zero and is reported as exactly 0: sin(pi) = 0,
+// cos(pi/2) = 0, and tan(pi/2) is out of domain rather than a meaningless
+// huge number. Exact arguments, like 10^100, are never adjusted.
+func periodic(name string, x value) (*apd.Decimal, error) {
+	if !x.d.IsZero() && adjustedExponent(x.d) > maxTrigExponent {
 		return nil, i18n.Errorf("%s: argument out of range", name)
 	}
 
-	// argErr is how far the float64 argument is from the real decimal one.
-	argErr, err := float64ConversionError(ctx, arg, x)
+	var noise *apd.Decimal
+	if x.inexact && !x.d.IsZero() {
+		noise = apd.New(periodicNoiseUlps, int32(adjustedExponent(x.d)-workingPrecision+1))
+		if noise.Cmp(maxPeriodicNoise) > 0 {
+			return nil, i18n.Errorf("%s: argument out of range", name)
+		}
+	}
+
+	sin, cos, err := sinCos(x.d)
 	if err != nil {
-		return nil, err
-	}
-	if f.periodic && argErr > maxPeriodicArgError {
-		return nil, i18n.Errorf("%s: argument out of range", name)
+		return nil, i18n.WrapErr(err)
 	}
 
-	result := f.fn(x)
-	if math.IsNaN(result) || math.IsInf(result, 0) {
+	if noise != nil {
+		for _, v := range []*apd.Decimal{sin, cos} {
+			if new(apd.Decimal).Abs(v).Cmp(noise) <= 0 {
+				v.SetInt64(0)
+			}
+		}
+	}
+
+	switch name {
+	case "sin":
+		return sin, nil
+	case "cos":
+		return cos, nil
+	}
+	if cos.IsZero() {
 		return nil, i18n.Errorf("%s: argument out of domain", name)
 	}
-	if f.periodic && math.Abs(result) <= float64NoiseFactor*argErr {
-		result = 0
-	}
-
 	res := new(apd.Decimal)
-	if _, err := res.SetFloat64(result); err != nil {
-		return nil, err
-	}
-	if _, err := apd.BaseContext.WithPrecision(float64SignificantDigits).Round(res, res); err != nil {
+	if _, err := defaultContext().Quo(res, sin, cos); err != nil {
 		return nil, i18n.WrapErr(err)
 	}
 	return res, nil
 }
 
-// float64ConversionError returns |arg - x| where x is arg converted to
-// float64, computed in decimal against x's exact binary value.
-//
-// apd's SetFloat64 can't be used for x: it takes the shortest decimal that
-// round-trips (so float64(1e100) reads back as exactly 1e100, hiding a
-// ~1e84 error). Every float64 has a finite exact decimal expansion of at
-// most 767 significant digits, which 'e' with that precision yields.
-func float64ConversionError(ctx *apd.Context, arg *apd.Decimal, x float64) (float64, error) {
-	xDec, _, err := apd.NewFromString(strconv.FormatFloat(x, 'e', 767, 64))
-	if err != nil {
-		return 0, err
-	}
-	diff := new(apd.Decimal)
-	if _, err := ctx.Sub(diff, arg, xDec); err != nil {
-		return 0, i18n.WrapErr(err)
-	}
-	d, err := diff.Float64()
-	if err != nil {
-		return math.Inf(1), nil
-	}
-	return math.Abs(d), nil
+// value is an intermediate result. inexact records whether rounding has
+// happened anywhere in computing it (apd's Inexact condition), i.e.
+// whether d may differ from the exact value of the expression. It's what
+// lets sin(pi) be 0 while sin(10^100) is computed exactly.
+type value struct {
+	d       *apd.Decimal
+	inexact bool
 }
 
-func eval(ctx *apd.Context, node Node, ans *apd.Decimal) (*apd.Decimal, error) {
+func eval(ctx *apd.Context, node Node, ans *value) (value, error) {
 	switch n := node.(type) {
 	case *NumberNode:
-		d, _, err := ctx.NewFromString(n.Value)
+		d, cond, err := ctx.NewFromString(n.Value)
 		if err != nil {
-			return nil, i18n.Errorf("invalid number %q", n.Value)
+			return value{}, i18n.Errorf("invalid number %q", n.Value)
 		}
-		return d, nil
+		return value{d, cond.Inexact()}, nil
 
 	case *IdentNode:
 		switch n.Name {
 		case "pi":
-			return new(apd.Decimal).Set(pi), nil
+			return value{new(apd.Decimal).Set(pi), true}, nil
 		case "ans":
 			if ans == nil {
-				return nil, i18n.Errorf("ans is not available yet")
+				return value{}, i18n.Errorf("ans is not available yet")
 			}
-			return new(apd.Decimal).Set(ans), nil
+			return value{new(apd.Decimal).Set(ans.d), ans.inexact}, nil
 		default:
-			return nil, i18n.Errorf("unknown identifier %q", n.Name)
+			return value{}, i18n.Errorf("unknown identifier %q", n.Name)
 		}
 
 	case *CallNode:
 		arg, err := eval(ctx, n.Arg, ans)
 		if err != nil {
-			return nil, err
+			return value{}, err
 		}
 
 		if fn, ok := decimalFunctions[n.Name]; ok {
 			res := new(apd.Decimal)
-			if _, err := fn(ctx, res, arg); err != nil {
-				return nil, i18n.WrapErr(err)
+			cond, err := fn(ctx, res, arg.d)
+			if err != nil {
+				return value{}, i18n.WrapErr(err)
 			}
-			return res, nil
+			return value{res, arg.inexact || cond.Inexact()}, nil
 		}
 
-		if fn, ok := float64Functions[n.Name]; ok {
-			return evalFloatFunc(ctx, n.Name, fn, arg)
+		if fn, ok := trigFunctions[n.Name]; ok {
+			res, err := fn(arg)
+			if err != nil {
+				return value{}, i18n.WrapErr(err)
+			}
+			// Trig results are irrational except at a few special points,
+			// so they're always treated as rounded.
+			return value{res, true}, nil
 		}
 
-		return nil, i18n.Errorf("unknown function %q", n.Name)
+		return value{}, i18n.Errorf("unknown function %q", n.Name)
 
 	case *UnaryNode:
 		operand, err := eval(ctx, n.Operand, ans)
 		if err != nil {
-			return nil, err
+			return value{}, err
 		}
 		if n.Op != TokenMinus {
-			return nil, i18n.Errorf("unsupported operator")
+			return value{}, i18n.Errorf("unsupported operator")
 		}
 		res := new(apd.Decimal)
-		if _, err := ctx.Neg(res, operand); err != nil {
-			return nil, i18n.WrapErr(err)
+		if _, err := ctx.Neg(res, operand.d); err != nil {
+			return value{}, i18n.WrapErr(err)
 		}
-		return res, nil
+		return value{res, operand.inexact}, nil
 
 	case *BinaryNode:
 		left, err := eval(ctx, n.Left, ans)
 		if err != nil {
-			return nil, err
+			return value{}, err
 		}
 		right, err := eval(ctx, n.Right, ans)
 		if err != nil {
-			return nil, err
+			return value{}, err
 		}
 
 		res := new(apd.Decimal)
+		var cond apd.Condition
 		switch n.Op {
 		case TokenPlus:
-			_, err = ctx.Add(res, left, right)
+			cond, err = ctx.Add(res, left.d, right.d)
 		case TokenMinus:
-			_, err = ctx.Sub(res, left, right)
+			cond, err = ctx.Sub(res, left.d, right.d)
 		case TokenStar:
-			_, err = ctx.Mul(res, left, right)
+			cond, err = ctx.Mul(res, left.d, right.d)
 		case TokenSlash:
-			_, err = ctx.Quo(res, left, right)
+			cond, err = ctx.Quo(res, left.d, right.d)
 		case TokenPercent:
-			err = remainder(ctx, res, left, right)
+			// The remainder is smaller than the divisor, so it's exact.
+			err = remainder(ctx, res, left.d, right.d)
 		case TokenCaret:
 			// apd follows the General Decimal Arithmetic spec, under which
 			// 0 to a negative power is Infinity with no condition raised,
 			// so no trap catches it. 0^-n = 1/0^n, so report it the same
 			// way as 1/0.
-			if left.IsZero() && right.Negative && !right.IsZero() {
-				return nil, i18n.Errorf("division by zero")
+			if left.d.IsZero() && right.d.Negative && !right.d.IsZero() {
+				return value{}, i18n.Errorf("division by zero")
 			}
 			// apd treats 0^0 as an invalid operation; like most
 			// calculators (and Go's math.Pow), use the convention 0^0 = 1.
-			if left.IsZero() && right.IsZero() {
+			if left.d.IsZero() && right.d.IsZero() {
 				res.SetInt64(1)
-				return res, nil
+				return value{res, false}, nil
 			}
-			_, err = ctx.Pow(res, left, right)
+			cond, err = ctx.Pow(res, left.d, right.d)
 		default:
-			return nil, i18n.Errorf("unsupported operator")
+			return value{}, i18n.Errorf("unsupported operator")
 		}
 		if err != nil {
-			return nil, i18n.WrapErr(err)
+			return value{}, i18n.WrapErr(err)
 		}
-		return res, nil
+		return value{res, left.inexact || right.inexact || cond.Inexact()}, nil
 
 	default:
-		return nil, i18n.Errorf("invalid expression")
+		return value{}, i18n.Errorf("invalid expression")
 	}
 }
 

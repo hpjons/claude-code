@@ -3,6 +3,8 @@ package engine
 import (
 	"strings"
 	"testing"
+
+	"github.com/cockroachdb/apd/v3"
 )
 
 func TestEvaluateBasic(t *testing.T) {
@@ -254,40 +256,95 @@ func TestEvaluateScientificNotationInput(t *testing.T) {
 	}
 }
 
-func TestEvaluateFloat64FunctionsPrecision(t *testing.T) {
+func TestEvaluateTrigValues(t *testing.T) {
+	// Reference values from mpmath at 1,200 digits, rounded to 50.
 	assertEvaluates(t, []struct{ expr, want string }{
-		// Results within the argument's float64 conversion error are 0.
-		{"sin(pi)", "0"},
-		{"sin(-pi)", "0"},
-		{"sin(100 * pi)", "0"},
-		{"cos(pi / 2)", "0"},
-		{"tan(pi)", "0"},
-		// ...but genuinely tiny results are kept.
-		{"sin(1e-20)", "1e-20"},
-		{"arctan(1e-30)", "1e-30"},
-		// Results are rounded to the 15 digits float64 can vouch for.
-		{"sin(1)", "0.841470984807897"},
-		{"sin(pi / 6)", "0.5"},
-		{"cos(2 * pi)", "1"},
-		{"arccos(-1)", "3.14159265358979"},
-		{"arctan(10^100)", "1.5707963267949"},
-		// Large arguments that float64 represents exactly still work.
-		{"sin(10^22)", "-0.852200849767189"},
+		{"sin(1)", "0.84147098480789650665250232163029899962256306079837"},
+		{"cos(1)", "0.54030230586813971740093660744297660373231042061792"},
+		{"sin(1e-20)", "9.9999999999999999999999999999999999999998333333333e-21"},
+		{"sin(10^22)", "-0.85220084976718880177270589375302936826176215041004"},
+		{"sin(10^100)", "-0.37237612366127668826208669555316429571966788356743"},
+		{"sin(10^1000)", "0.65335979821036985694809946803976857426591654081541"},
+		{"sin(2^199)", "-0.96898675455215408154330141770095624584619203465282"},
+		{"arctan(1)", "0.78539816339744830961566084581987572104929234984378"},
+		{"arcsin(0.5)", "0.52359877559829887307710723054658381403286156656252"},
+		{"arccos(0.99999999999999999999)", "0.00000000014142135623730950488028672355116756577770092676309"},
+		{"arccos(-1)", "3.1415926535897932384626433832795028841971693993751"},
+		{"arctan(10^100)", "1.5707963267948966192313216916397514420985846996876"},
+		{"arcsin(1)", "1.5707963267948966192313216916397514420985846996876"},
+		{"arccos(1)", "0"},
+		{"arcsin(-1) * 2 + pi", "0"},
 	})
 }
 
-func TestEvaluateTrigArgumentTooImprecise(t *testing.T) {
-	// float64(10^23) and float64(10^100) are off by millions or more, so
-	// any sin/cos/tan result would be arbitrary.
-	for _, expr := range []string{"sin(10^23)", "cos(10^100)", "tan(10^100)", "sin(1e400)"} {
-		_, err := Evaluate(expr)
-		if err == nil {
-			t.Errorf("Evaluate(%q) expected an error, got nil", expr)
-			continue
+func TestEvaluateTrigExactResults(t *testing.T) {
+	assertEvaluates(t, []struct{ expr, want string }{
+		// Results within the rounding error of a rounded argument are 0.
+		{"sin(pi)", "0"},
+		{"sin(-pi)", "0"},
+		{"sin(pi / 7 * 7)", "0"},
+		{"sin(100 * pi)", "0"},
+		{"cos(pi / 2)", "0"},
+		{"tan(pi)", "0"},
+		// ...but tiny results of exact arguments are kept.
+		{"arctan(1e-30)", "1e-30"},
+		// Exact values come out exact.
+		{"sin(pi / 6)", "0.5"},
+		{"cos(2 * pi)", "1"},
+		{"tan(pi / 4)", "1"},
+		{"arctan(1) * 4", "3.1415926535897932384626433832795028841971693993751"},
+		{"sin(arcsin(0.3))", "0.3"},
+	})
+}
+
+func TestEvaluateTrigIdentities(t *testing.T) {
+	// The working precision's guard digits absorb the rounding in each
+	// step, so identities hold exactly at display precision.
+	for _, x := range []string{"2", "1", "0.5", "-3.7", "123.456", "1e10", "1e-5", "pi / 3"} {
+		expr := "sin(" + x + ")^2 + cos(" + x + ")^2"
+		assertEvaluates(t, []struct{ expr, want string }{{expr, "1"}})
+	}
+}
+
+func TestEvaluateGuardDigits(t *testing.T) {
+	assertEvaluates(t, []struct{ expr, want string }{
+		{"1/3*3", "1"},
+		{"2/3*3", "2"},
+		{"sqrt(2)^2", "2"},
+		{"1/7*7", "1"},
+	})
+}
+
+func TestEvaluateTrigRangeAndDomain(t *testing.T) {
+	cases := []struct {
+		expr string
+		want string
+	}{
+		{"sin(1e1001)", "sin: argument out of range"},
+		{"cos(-1e1001)", "cos: argument out of range"},
+		{"tan(pi / 2)", "tan: argument out of domain"},
+		// 2^200 has 61 digits, so it's rounded and uncertain by ~100.
+		{"sin(2^200)", "sin: argument out of range"},
+		{"cos(10^70 + 1)", "cos: argument out of range"},
+		{"arcsin(1.0000001)", "arcsin: argument out of domain"},
+		{"arccos(-2)", "arccos: argument out of domain"},
+	}
+	for _, c := range cases {
+		_, err := Evaluate(c.expr)
+		if err == nil || err.Error() != c.want {
+			t.Errorf("Evaluate(%q) error = %v, want %q", c.expr, err, c.want)
 		}
-		if !strings.Contains(err.Error(), "argument out of range") {
-			t.Errorf("Evaluate(%q) error = %q, want an argument-out-of-range error", expr, err)
-		}
+	}
+}
+
+func TestComputePi(t *testing.T) {
+	const want = "3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117068"
+	if got := computePi(100).Text('f'); got != want {
+		t.Errorf("computePi(100) = %s, want %s", got, want)
+	}
+	// Larger requests grow the cache and agree on the shared digits.
+	if got := piTo(500).Text('f'); got[:len(want)-1] != want[:len(want)-1] {
+		t.Errorf("piTo(500) = %s..., disagrees with the first 100 digits", got[:len(want)])
 	}
 }
 
@@ -368,7 +425,7 @@ func TestEvalPiReturnsCopy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("eval(pi) returned error: %v", err)
 	}
-	got.SetInt64(0)
+	got.d.SetInt64(0)
 
 	if pi.Text('f') != want {
 		t.Errorf("mutating eval's result changed the cached pi to %s", pi.Text('f'))
@@ -383,7 +440,7 @@ func TestSessionAnsNotAliased(t *testing.T) {
 	if err != nil {
 		t.Fatalf("eval(ans) returned error: %v", err)
 	}
-	got.SetInt64(0)
+	got.d.SetInt64(0)
 
 	runSession(t, s, []sessionStep{{expr: "ans", want: "5"}})
 }
@@ -436,5 +493,61 @@ func TestEvaluateZeroToZero(t *testing.T) {
 		{"(-0)^0", "1"},
 		{"-0^0", "-1"}, // unary minus binds looser than ^: -(0^0)
 		{"(1 - 1)^(2 - 2)", "1"},
+	})
+}
+
+func TestFormatDecimalRounding(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"0.1234", "0.1234"},
+		{"-5.00", "-5"},
+		{"1234500", "1234500"},
+		{"0.00001", "0.00001"},
+		// Half up at the 50th digit, with carries.
+		{"1.00000000000000000000000000000000000000000000000005", "1.0000000000000000000000000000000000000000000000001"},
+		{"1.00000000000000000000000000000000000000000000000004", "1"},
+		{"9.99999999999999999999999999999999999999999999999995", "10"},
+		{"-9.99999999999999999999999999999999999999999999999995e-30", "-1e-29"},
+		{"99999999999999999999999999999999999999999999999999.5", "1e50"},
+	}
+	for _, c := range cases {
+		d, _, err := apd.NewFromString(c.in)
+		if err != nil {
+			t.Fatalf("NewFromString(%q): %v", c.in, err)
+		}
+		if got := formatDecimal(d); got != c.want {
+			t.Errorf("formatDecimal(%s) = %q, want %q", c.in, got, c.want)
+		}
+	}
+}
+
+func TestFormatDecimalBelowApdExponentLimit(t *testing.T) {
+	// A 60-digit coefficient for a value near 1e-99999 has an exponent
+	// below apd's limit (calculations produce these, though
+	// NewFromString refuses them); it must still format correctly.
+	cases := []struct {
+		coeff string
+		exp   int32
+		want  string
+	}{
+		{"1" + strings.Repeat("0", 59), -100058, "1e-99999"},
+		{strings.Repeat("3", 60), -100058, "3.3333333333333333333333333333333333333333333333333e-99999"},
+	}
+	for _, c := range cases {
+		coeff, ok := new(apd.BigInt).SetString(c.coeff, 10)
+		if !ok {
+			t.Fatalf("bad coefficient %q", c.coeff)
+		}
+		if got := formatDecimal(apd.NewWithBigInt(coeff, c.exp)); got != c.want {
+			t.Errorf("formatDecimal(%se%d) = %q, want %q", c.coeff, c.exp, got, c.want)
+		}
+	}
+}
+
+func TestEvaluateNearMinimumExponent(t *testing.T) {
+	assertEvaluates(t, []struct{ expr, want string }{
+		{"tan(1e-99999)", "1e-99999"},
+		{"sin(1e-99999)", "1e-99999"},
+		{"arcsin(1e-99999)", "1e-99999"},
+		{"arctan(1e99999) * 2 - pi", "0"},
 	})
 }

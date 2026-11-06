@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GoLog user guide</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root {
+  --ink: #1d2125; --muted: #5f666d; --line: #d3d6d2; --surface: #f7f8f6; --paper: #fff;
+  --accent: #1f4e5f; --soft: rgb(31 78 95 / 0.08);
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --ink: #e4e7e5; --muted: #a3aaa8; --line: #3a4044; --surface: #1e2427; --paper: #262d31; --accent: #7fb6c8; --soft: rgb(127 182 200 / 0.1); color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.6 var(--font); color: var(--ink); background: var(--surface); }
+a { color: var(--accent); }
+.wrap { display: grid; grid-template-columns: 14rem minmax(0, 46rem); gap: 3rem; max-width: 66rem; margin: 0 auto; padding: 2.5rem 1rem 5rem; }
+nav { position: sticky; top: 1.5rem; align-self: start; font-size: 0.92rem; }
+nav ol { list-style: none; padding: 0; margin: 0.6rem 0 0; display: grid; gap: 0.25rem; }
+nav a { text-decoration: none; }
+nav a:hover { text-decoration: underline; }
+nav .back { color: var(--muted); }
+h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 0.4rem; letter-spacing: -0.01em; }
+.lead { color: var(--muted); margin: 0 0 2rem; font-size: 1.06rem; }
+h2 { font-size: 1.3rem; margin: 2.8rem 0 0.6rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+h3 { font-size: 1.02rem; margin: 1.6rem 0 0.3rem; }
+p, li { max-width: 68ch; }
+ul, ol { padding-left: 1.3rem; }
+li { margin: 0.25rem 0; }
+kbd { font: 0.85em var(--font); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 0.3em; background: var(--paper); }
+code { font-size: 0.9em; background: var(--soft); padding: 0.05em 0.3em; border-radius: 3px; }
+figure { margin: 1.2rem 0 1.6rem; }
+figure img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; }
+figcaption { color: var(--muted); font-size: 0.88rem; margin-top: 0.4rem; }
+.note { border-left: 3px solid var(--accent); background: var(--soft); padding: 0.7rem 1rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+.note p { margin: 0.3rem 0; }
+table { border-collapse: collapse; margin: 0.8rem 0; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.35rem 0.8rem 0.35rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 800px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding-top: 1.5rem; }
+  nav { position: static; }
+  nav ol { grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav aria-label="Contents">
+  <a class="back" href="/">← Back to GoLog</a>
+  <ol>
+    <li><a href="#start">Starting and stopping</a></li>
+    <li><a href="#projects">Projects and logs</a></li>
+    <li><a href="#beds">Adding beds</a></li>
+    <li><a href="#drawing">Editing on the drawing</a></li>
+    <li><a href="#layout">Columns, scale and paper</a></li>
+    <li><a href="#export">Export and print</a></li>
+    <li><a href="#statistics">Statistics</a></li>
+    <li><a href="#sedlog">Logs from SedLog</a></li>
+    <li><a href="#backup">Your data and backups</a></li>
+    <li><a href="#problems">If something goes wrong</a></li>
+    <li><a href="#about">About GoLog</a></li>
+  </ol>
+</nav>
+
+<main>
+<h1>GoLog user guide</h1>
+<p class="lead">GoLog draws graphic sediment logs. You type in the beds of a measured section, and
+GoLog draws the log at print scale, ready to print or put in a report. It can also tell you
+whether the beds are ordered.</p>
+
+<h2 id="start">Starting and stopping</h2>
+<p>GoLog is a single program. You don't need to install it or be online. Start it, and it opens
+in your web browser.</p>
+<table>
+  <tr><th>Windows</th><td>Double-click <code>golog.exe</code>. The first time, Windows may say it
+  protected your PC: click <b>More info</b>, then <b>Run anyway</b>. A black window opens next to
+  the browser. Leave it open while you work.</td></tr>
+  <tr><th>macOS</th><td>Double-click <code>golog</code>. The first time, macOS says it can't check
+  GoLog for malicious software, because GoLog isn't from the App Store. Open <b>System Settings ›
+  Privacy &amp; Security</b>, scroll down and click <b>Open Anyway</b> (on macOS 14 and older:
+  right-click <code>golog</code> and choose <b>Open</b>). After that a double-click is enough. A
+  Terminal window opens next to the browser. Leave it open while you work.</td></tr>
+  <tr><th>Linux</th><td>Run <code>./golog</code> in a terminal.</td></tr>
+</table>
+<p><b>To stop GoLog,</b> click <b>Stop GoLog</b> at the bottom of the Projects page, or press
+<kbd>Ctrl</kbd>+<kbd>C</kbd> in its window. Closing the browser tab does not stop it. Your
+work is saved as you go, so stopping never loses anything.</p>
+<p>If you start GoLog while it is already running, it just opens another browser tab on the
+running copy.</p>
+
+<h2 id="projects">Projects and logs</h2>
+<p>A <b>project</b> holds the logs from one field area or exercise. A <b>log</b> is one measured
+section. On the Projects page, type a name and click <b>New project</b>. Open the project,
+then make a log with <b>New log</b>.</p>
+<figure>
+  <img src="/guide/projects.webp" width="1280" height="800" alt="The Projects page: a list of two projects, a box for a new project's name, and Stop GoLog at the bottom.">
+  <figcaption>The Projects page. User guide opens this page.</figcaption>
+</figure>
+
+<h2 id="beds">Adding beds</h2>
+<p>Beds are entered from the base up, as you measure them in the field. Click <b>Add the first
+bed</b>, then <b>Add bed on top</b> for each new one. Click any bed in the drawing to select it.
+The <b>Bed</b> tab on the right then shows everything about it:</p>
+<ul>
+  <li><b>Thickness</b>, in metres or centimetres (the <b>Units</b> menu in the top bar).</li>
+  <li><b>Lithology</b>: up to three rock types with percentages. Click the colour square to
+  give one bed its own colour.</li>
+  <li><b>Grain size</b> at the base and at the top. When they differ, the bed is drawn fining or
+  coarsening upward.</li>
+  <li><b>Base contact</b>: sharp, erosional (drawn wavy), gradational (dashed) or unknown.</li>
+  <li><b>Structure inside the bed</b>, such as cross-bedding, drawn repeated inside the grain-size
+  profile.</li>
+  <li><b>Structures &amp; fossils</b> drawn beside the bed: click <b>Add symbols…</b> and search.</li>
+  <li><b>Bioturbation</b>, <b>palaeocurrents</b> (directions in degrees, e.g. <code>45, 60</code>),
+  <b>facies</b>, the <b>formation</b> or <b>age</b> unit that starts at this bed, and <b>notes</b>.
+  Some of these fields only appear when their column is turned on in the Layout tab.</li>
+</ul>
+<figure>
+  <img src="/guide/log-editor.webp" width="1280" height="800" alt="The log editor: the drawn log on the left with bed 7 highlighted, and the Bed tab on the right showing its thickness, lithology, grain size, base contact and structure.">
+  <figcaption>A log with bed 7 selected. The drawing on the left, the selected bed on the right.</figcaption>
+</figure>
+
+<h2 id="drawing">Editing on the drawing</h2>
+<p>Many changes are quicker on the drawing itself:</p>
+<ul>
+  <li>Drag a bed's <b>top edge</b> up or down to change its thickness.</li>
+  <li>Drag the <b>grain-size edge</b> left or right. The lower half changes the grain size at the
+  base, the upper half at the top.</li>
+  <li>Drag a <b>whole bed</b> to move it up or down the section.</li>
+  <li>Drag a <b>column edge</b> in the header to make the column wider or narrower.</li>
+</ul>
+<p>Keys, when the drawing has focus: <kbd>↑</kbd> <kbd>↓</kbd> select the next bed,
+<kbd>Alt</kbd>+<kbd>↑</kbd> <kbd>↓</kbd> move it, <kbd>Delete</kbd> deletes it (<b>Undo</b>
+brings it back) and <kbd>Esc</kbd> closes it.</p>
+<p><b>Undo and redo</b> work for every change: use the ↶ ↷ buttons, <kbd>Ctrl</kbd>+<kbd>Z</kbd>,
+and <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd>.</p>
+
+<h2 id="layout">Columns, scale and paper</h2>
+<p>The <b>Layout</b> tab sets how the log is drawn and printed:</p>
+<ul>
+  <li><b>Columns</b>: show or hide each one, change its title, move it left or right, and set its
+  width in millimetres. Columns include the age and formation, height scale, lithology, grain size,
+  structures &amp; fossils, bioturbation, palaeocurrent, facies and notes.</li>
+  <li><b>Scale</b> (top bar): 1:10 to 1:1000. At 1:50, one metre of section is two centimetres on
+  paper.</li>
+  <li><b>Paper</b>: A4, A3 or Letter. Dashed blue lines on the drawing show where printed pages end.</li>
+  <li><b>Colour</b> or <b>black and white</b>. In colour, each rock has its usual colour under its
+  pattern.</li>
+  <li><b>Grain-size scale</b>: untick <i>Grain sizes</i> to leave out the names clay, silt, vf … boul
+  above the grain-size column, <i>Groups</i> to leave out mud, sand and gravel, and <i>Column
+  title</i> to leave out the column's name. Untick all three for an empty header.</li>
+</ul>
+<figure>
+  <img src="/guide/layout.webp" width="1280" height="800" alt="The Layout tab: paper, colours, palaeocurrent style and the list of columns with their widths.">
+  <figcaption>The Layout tab.</figcaption>
+</figure>
+
+<h2 id="export">Export and print</h2>
+<p><b>Export &amp; print…</b> in the top bar saves the log in the form you need:</p>
+<table>
+  <tr><th>PDF</th><td>Pages on the chosen paper, at the log's scale, with the column headers on every page. Best for printing and sending.</td></tr>
+  <tr><th>Print…</th><td>The same pages straight to a printer. In the print window, choose the same paper size and keep the scale at 100 %.</td></tr>
+  <tr><th>SVG drawing</th><td>The whole log as one drawing, to finish in Inkscape or Illustrator.</td></tr>
+  <tr><th>PNG picture</th><td>The whole log as a picture for reports and slides.</td></tr>
+  <tr><th>CSV table</th><td>The beds as a table for Excel or LibreOffice.</td></tr>
+  <tr><th>CSV for SedLog</th><td>The same table in the form SedLog's <i>Import Log from CSV file</i> accepts.</td></tr>
+  <tr><th>GoLog file</th><td>Everything in the log, to back it up or give it to someone else with GoLog. They open it with <b>Import file</b> on a project page.</td></tr>
+</table>
+<p>A <b>key</b> to the patterns, symbols and contacts used is added below the log unless you
+untick it. If the columns are wider than the paper, the pages are shrunk to fit and the window
+tells you that the scale is no longer exact.</p>
+<figure>
+  <img src="/guide/export.webp" width="1280" height="800" alt="The Export and print window with buttons for PDF, Print, SVG drawing, PNG picture, CSV table, CSV for SedLog and GoLog file.">
+  <figcaption>The Export and print window.</figcaption>
+</figure>
+
+<h2 id="statistics">Statistics</h2>
+<p><b>Statistics</b> in the top bar first shows what the section is made of: bed thicknesses,
+and how much of the section each lithology, grain size, contact type and facies takes up. Then
+it tests whether the beds are <b>ordered</b>:</p>
+<ul>
+  <li><b>Are the facies ordered?</b> The grid shows how often each facies (rows) is followed by
+  each other facies (columns), counting only changes of facies. In an ordered section each facies
+  is mostly followed by one other, and the Markov order number <i>m</i> is close to 1. In a
+  random one, <i>m</i> is close to 0.</li>
+  <li><b>Do beds thicken or thin upward?</b> The runs number <i>r</i> is high when the section has
+  long runs of beds that get thicker or thinner upward.</li>
+</ul>
+<p>Each number is compared with 5000 copies of the same beds shuffled into random order (the bars
+in the chart). <i>p</i> is the share of shuffled copies that score as high as your log or higher.
+A <i>p</i> below 0.01 is very strong evidence that the order is real and not chance. Above 0.10
+there is no evidence of order. The facies test needs a facies on the beds: turn on the Facies
+column in the Layout tab, then give each bed a facies code, such as <code>1</code>, <code>2</code>,
+<code>3</code> or <code>St</code>, <code>Sh</code>, <code>Fm</code>. <b>Save as CSV</b> writes all
+the numbers for a spreadsheet.</p>
+<figure>
+  <img src="/guide/statistics.webp" width="1280" height="800" alt="The Statistics window: a grid of facies transition probabilities and a bar chart of the order number m in shuffled sections, with a red line for this log.">
+  <figcaption>The facies test. The red line is this log, and the bars are the shuffled copies.</figcaption>
+</figure>
+<p class="note">The method is from P. M. Burgess (2016), <i>Identifying ordered strata: evidence,
+methods, and meaning</i>, Journal of Sedimentary Research 86, 148–167. SedLog's <i>Order
+Analysis</i> uses the same method and gives the same numbers in most cases.</p>
+
+<h2 id="sedlog">Logs from SedLog</h2>
+<p>On a project's page, <b>Import file…</b> opens logs saved by SedLog (<code>.slg</code>), SedLog
+templates (<code>.tem</code>), CSV files, and GoLog files. You see a preview first, with a list
+of anything that could not be brought over exactly. For a CSV file from elsewhere, GoLog matches
+the columns by their headings, and you choose the rest from menus.</p>
+<p>In the Layout tab, <b>Use a SedLog layout…</b> takes the columns and scale from a SedLog
+template.</p>
+
+<h2 id="backup">Your data and backups</h2>
+<p>All your projects are kept in one file, <code>golog.db</code>, in this folder:</p>
+<table>
+  <tr><th>Windows</th><td><code>%AppData%\GoLog</code> (paste this into the File Explorer address bar)</td></tr>
+  <tr><th>macOS</th><td><code>~/Library/Application Support/GoLog</code></td></tr>
+  <tr><th>Linux</th><td><code>~/.local/share/GoLog</code></td></tr>
+</table>
+<p><b>To back up everything,</b> stop GoLog and copy <code>golog.db</code> somewhere safe. To move
+your work to another computer, copy the file into the same folder there. To share a single log,
+use <b>Export &amp; print… › GoLog file</b>.</p>
+
+<h2 id="problems">If something goes wrong</h2>
+<h3>The browser doesn't open</h3>
+<p>Open the address shown in GoLog's window, usually <code>http://127.0.0.1:7341</code>.</p>
+<h3>GoLog says another program is using the address</h3>
+<p>Usually this is an earlier GoLog that was paused with <kbd>Ctrl</kbd>+<kbd>Z</kbd> rather than
+stopped. In that terminal, type <code>fg</code> and press Enter, then press <kbd>Ctrl</kbd>+<kbd>C</kbd>.
+Or restart the computer. GoLog still starts, but on a different address.</p>
+<h3>"Not saved – retrying" in the top bar</h3>
+<p>GoLog has stopped, or its window was closed. Start GoLog again but <b>don't reload the
+page</b>. It tries again every few seconds and says "Saved" once GoLog is back. Reloading before
+that would lose the changes made since the last save.</p>
+<h3>The printed log is the wrong size</h3>
+<p>Choose the same paper size in the print window as in the Layout tab, and turn off "fit to page"
+or "shrink to fit". Or print the PDF, which keeps the scale.</p>
+
+<h2 id="about">About GoLog</h2>
+<p>GoLog is free to use, copy and change under the <a href="/notices.txt">MIT licence</a>, which
+also lists the libraries GoLog is built with and their licences. It comes with no warranty: keep
+backups of work that matters.</p>
+<p>GoLog was written with the AI coding assistant Claude Code, directed and tested by Helgi Páll
+Jónsson. The idea comes from SedLog (Royal Holloway, University of London), but GoLog shares none
+of its code, patterns or symbols.</p>
+</main>
+</div>
+</body>
+</html>

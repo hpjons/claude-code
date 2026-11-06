@@ -1,0 +1,11 @@
+/golog
+/dist/
+/web/node_modules/
+/web/dist/*
+!/web/dist/.keep
+*.db
+*.db-shm
+*.db-wal
+
+# Screenshots of SedLog and the test helper: kept locally for reference only
+/docs/original/

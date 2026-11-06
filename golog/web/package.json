@@ -1,0 +1,22 @@
+{
+  "name": "golog-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "e2e": "node e2e/run.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "24.43.1",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.4"
+  },
+  "dependencies": {
+    "jspdf": "4.2.1",
+    "svg2pdf.js": "2.8.1"
+  }
+}

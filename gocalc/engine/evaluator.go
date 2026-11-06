@@ -137,34 +137,6 @@ func float64ConversionError(ctx *apd.Context, arg *apd.Decimal, x float64) (floa
 	return math.Abs(d), nil
 }
 
-// Evaluate parses and evaluates a single expression, returning a clean,
-// human-readable decimal string. ans is the previous result (empty if
-// there isn't one yet) and is made available to the expression as the
-// "ans" identifier.
-func Evaluate(expression string, ans string) (string, error) {
-	node, err := Parse(expression)
-	if err != nil {
-		return "", err
-	}
-
-	ctx := defaultContext()
-
-	var ansDecimal *apd.Decimal
-	if ans != "" {
-		ansDecimal, _, err = ctx.NewFromString(ans)
-		if err != nil || ansDecimal.Form != apd.Finite {
-			return "", i18n.Errorf("invalid previous result %q", ans)
-		}
-	}
-
-	result, err := eval(ctx, node, ansDecimal)
-	if err != nil {
-		return "", err
-	}
-
-	return formatDecimal(ctx, result), nil
-}
-
 func eval(ctx *apd.Context, node Node, ans *apd.Decimal) (*apd.Decimal, error) {
 	switch n := node.(type) {
 	case *NumberNode:
@@ -182,7 +154,7 @@ func eval(ctx *apd.Context, node Node, ans *apd.Decimal) (*apd.Decimal, error) {
 			if ans == nil {
 				return nil, i18n.Errorf("ans is not available yet")
 			}
-			return ans, nil
+			return new(apd.Decimal).Set(ans), nil
 		default:
 			return nil, i18n.Errorf("unknown identifier %q", n.Name)
 		}

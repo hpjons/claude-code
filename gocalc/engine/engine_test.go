@@ -27,7 +27,7 @@ func TestEvaluateBasic(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		got, err := Evaluate(c.expr, "")
+		got, err := Evaluate(c.expr)
 		if err != nil {
 			t.Errorf("Evaluate(%q) returned error: %v", c.expr, err)
 			continue
@@ -39,7 +39,7 @@ func TestEvaluateBasic(t *testing.T) {
 }
 
 func TestEvaluateDivisionByZero(t *testing.T) {
-	_, err := Evaluate("5 / 0", "")
+	_, err := Evaluate("5 / 0")
 	if err == nil {
 		t.Fatal("expected an error for division by zero, got nil")
 	}
@@ -49,7 +49,7 @@ func TestEvaluateDivisionByZero(t *testing.T) {
 }
 
 func TestEvaluateModuloByZero(t *testing.T) {
-	_, err := Evaluate("5 % 0", "")
+	_, err := Evaluate("5 % 0")
 	if err == nil {
 		t.Fatal("expected an error for modulo by zero, got nil")
 	}
@@ -66,7 +66,7 @@ func TestEvaluateSyntaxErrors(t *testing.T) {
 	}
 
 	for _, expr := range exprs {
-		_, err := Evaluate(expr, "")
+		_, err := Evaluate(expr)
 		if err == nil {
 			t.Errorf("Evaluate(%q) expected a syntax error, got nil", expr)
 		}
@@ -94,7 +94,7 @@ func TestEvaluateConstantsAndFunctions(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		got, err := Evaluate(c.expr, "")
+		got, err := Evaluate(c.expr)
 		if err != nil {
 			t.Errorf("Evaluate(%q) returned error: %v", c.expr, err)
 			continue
@@ -105,26 +105,49 @@ func TestEvaluateConstantsAndFunctions(t *testing.T) {
 	}
 }
 
-func TestEvaluateAns(t *testing.T) {
-	first, err := Evaluate("2 + 3", "")
-	if err != nil {
-		t.Fatalf("Evaluate(%q) returned error: %v", "2 + 3", err)
-	}
-	if first != "5" {
-		t.Fatalf("Evaluate(%q) = %q, want %q", "2 + 3", first, "5")
-	}
+// sessionStep is one expression evaluated in a Session, with its expected
+// result, or wantErr if it should fail.
+type sessionStep struct {
+	expr, want string
+	wantErr    bool
+}
 
-	second, err := Evaluate("ans * 2", first)
-	if err != nil {
-		t.Fatalf("Evaluate(%q) returned error: %v", "ans * 2", err)
-	}
-	if second != "10" {
-		t.Errorf("Evaluate(%q) = %q, want %q", "ans * 2", second, "10")
+func runSession(t *testing.T, s *Session, steps []sessionStep) {
+	t.Helper()
+	for _, step := range steps {
+		got, err := s.Evaluate(step.expr)
+		switch {
+		case step.wantErr && err == nil:
+			t.Errorf("Session.Evaluate(%q) = %q, want an error", step.expr, got)
+		case !step.wantErr && err != nil:
+			t.Errorf("Session.Evaluate(%q) returned error: %v", step.expr, err)
+		case !step.wantErr && got != step.want:
+			t.Errorf("Session.Evaluate(%q) = %q, want %q", step.expr, got, step.want)
+		}
 	}
 }
 
+func TestSessionAns(t *testing.T) {
+	runSession(t, NewSession(), []sessionStep{
+		{expr: "ans + 1", wantErr: true}, // no previous result yet
+		{expr: "2 + 3", want: "5"},
+		{expr: "ans * 2", want: "10"},
+		{expr: "ans", want: "10"},
+		// A failed evaluation leaves ans unchanged.
+		{expr: "1 / 0", wantErr: true},
+		{expr: "ans + 1", want: "11"},
+	})
+}
+
+func TestSessionsAreIndependent(t *testing.T) {
+	a, b := NewSession(), NewSession()
+	runSession(t, a, []sessionStep{{expr: "7", want: "7"}})
+	runSession(t, b, []sessionStep{{expr: "ans", wantErr: true}})
+	runSession(t, a, []sessionStep{{expr: "ans", want: "7"}})
+}
+
 func TestEvaluateAnsUnavailable(t *testing.T) {
-	_, err := Evaluate("ans + 1", "")
+	_, err := Evaluate("ans + 1")
 	if err == nil {
 		t.Fatal("expected an error when ans is not yet available, got nil")
 	}
@@ -133,7 +156,7 @@ func TestEvaluateAnsUnavailable(t *testing.T) {
 func TestEvaluateUnknownIdentifierOrFunction(t *testing.T) {
 	exprs := []string{"foo", "bar(1)"}
 	for _, expr := range exprs {
-		_, err := Evaluate(expr, "")
+		_, err := Evaluate(expr)
 		if err == nil {
 			t.Errorf("Evaluate(%q) expected an error, got nil", expr)
 		}
@@ -143,7 +166,7 @@ func TestEvaluateUnknownIdentifierOrFunction(t *testing.T) {
 func TestEvaluateTrigDomainErrors(t *testing.T) {
 	exprs := []string{"arcsin(2)", "arccos(2)", "arcsin(-2)"}
 	for _, expr := range exprs {
-		_, err := Evaluate(expr, "")
+		_, err := Evaluate(expr)
 		if err == nil {
 			t.Errorf("Evaluate(%q) expected a domain error, got nil", expr)
 		}
@@ -153,7 +176,7 @@ func TestEvaluateTrigDomainErrors(t *testing.T) {
 func assertEvaluates(t *testing.T, cases []struct{ expr, want string }) {
 	t.Helper()
 	for _, c := range cases {
-		got, err := Evaluate(c.expr, "")
+		got, err := Evaluate(c.expr)
 		if err != nil {
 			t.Errorf("Evaluate(%q) returned error: %v", c.expr, err)
 			continue
@@ -187,7 +210,7 @@ func TestEvaluateScientificNotationOutput(t *testing.T) {
 	})
 
 	// Output must stay short even for very large results.
-	got, err := Evaluate("10^99999", "")
+	got, err := Evaluate("10^99999")
 	if err != nil {
 		t.Fatalf("Evaluate(10^99999) returned error: %v", err)
 	}
@@ -196,17 +219,20 @@ func TestEvaluateScientificNotationOutput(t *testing.T) {
 	}
 }
 
-func TestEvaluateScientificResultRoundTripsAsAns(t *testing.T) {
-	first, err := Evaluate("10^100", "")
+func TestEvaluateScientificResultParsesAsInput(t *testing.T) {
+	// Results are shown in scientific notation; the user must be able to
+	// copy one back into the input.
+	first, err := Evaluate("10^100")
 	if err != nil {
 		t.Fatalf("Evaluate(10^100) returned error: %v", err)
 	}
-	got, err := Evaluate("ans / 10^99", first)
+	expr := first + " / 10^99"
+	got, err := Evaluate(expr)
 	if err != nil {
-		t.Fatalf("Evaluate(ans / 10^99) returned error: %v", err)
+		t.Fatalf("Evaluate(%q) returned error: %v", expr, err)
 	}
 	if got != "10" {
-		t.Errorf("Evaluate(ans / 10^99) = %q, want %q", got, "10")
+		t.Errorf("Evaluate(%q) = %q, want %q", expr, got, "10")
 	}
 }
 
@@ -222,7 +248,7 @@ func TestEvaluateScientificNotationInput(t *testing.T) {
 
 	// An 'e' with no exponent digits isn't part of the number.
 	for _, expr := range []string{"1e", "1e+", "2e x"} {
-		if _, err := Evaluate(expr, ""); err == nil {
+		if _, err := Evaluate(expr); err == nil {
 			t.Errorf("Evaluate(%q) expected an error, got nil", expr)
 		}
 	}
@@ -254,7 +280,7 @@ func TestEvaluateTrigArgumentTooImprecise(t *testing.T) {
 	// float64(10^23) and float64(10^100) are off by millions or more, so
 	// any sin/cos/tan result would be arbitrary.
 	for _, expr := range []string{"sin(10^23)", "cos(10^100)", "tan(10^100)", "sin(1e400)"} {
-		_, err := Evaluate(expr, "")
+		_, err := Evaluate(expr)
 		if err == nil {
 			t.Errorf("Evaluate(%q) expected an error, got nil", expr)
 			continue
@@ -278,7 +304,7 @@ func TestEvaluateErrorMessages(t *testing.T) {
 		{"1e", `unexpected token "e" at position 1`},
 	}
 	for _, c := range cases {
-		_, err := Evaluate(c.expr, "")
+		_, err := Evaluate(c.expr)
 		if err == nil {
 			t.Errorf("Evaluate(%q) expected an error, got nil", c.expr)
 			continue
@@ -299,7 +325,7 @@ func TestEvaluateLibraryErrorMessages(t *testing.T) {
 		{"1e99999 % 1e-99999", "exponent out of range"},
 	}
 	for _, c := range cases {
-		_, err := Evaluate(c.expr, "")
+		_, err := Evaluate(c.expr)
 		if err == nil {
 			t.Errorf("Evaluate(%q) expected an error, got nil", c.expr)
 			continue
@@ -312,7 +338,7 @@ func TestEvaluateLibraryErrorMessages(t *testing.T) {
 
 func TestEvaluateZeroToNegativePower(t *testing.T) {
 	for _, expr := range []string{"0^-1", "0^-0.5", "0 ** -2", "(-0)^-1", "1 / (0^-1)", "-(0^-1)"} {
-		_, err := Evaluate(expr, "")
+		_, err := Evaluate(expr)
 		if err == nil {
 			t.Errorf("Evaluate(%q) expected an error, got nil", expr)
 			continue
@@ -327,14 +353,6 @@ func TestEvaluateZeroToNegativePower(t *testing.T) {
 		{"0^2", "0"},
 		{"0^0.5", "0"},
 	})
-}
-
-func TestEvaluateRejectsNonFiniteAns(t *testing.T) {
-	for _, ans := range []string{"Infinity", "-Infinity", "NaN"} {
-		if _, err := Evaluate("ans + 1", ans); err == nil {
-			t.Errorf("Evaluate(%q) with ans=%q expected an error, got nil", "ans + 1", ans)
-		}
-	}
 }
 
 func TestEvalRejectsUnknownUnaryOperator(t *testing.T) {
@@ -356,4 +374,17 @@ func TestEvalPiReturnsCopy(t *testing.T) {
 	if pi.Text('f') != want {
 		t.Errorf("mutating eval's result changed the cached pi to %s", pi.Text('f'))
 	}
+}
+
+func TestSessionAnsNotAliased(t *testing.T) {
+	s := NewSession()
+	runSession(t, s, []sessionStep{{expr: "5", want: "5"}})
+
+	got, err := eval(defaultContext(), &IdentNode{Name: "ans"}, s.ans)
+	if err != nil {
+		t.Fatalf("eval(ans) returned error: %v", err)
+	}
+	got.SetInt64(0)
+
+	runSession(t, s, []sessionStep{{expr: "ans", want: "5"}})
 }

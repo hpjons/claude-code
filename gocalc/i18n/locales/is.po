@@ -36,9 +36,6 @@ msgstr "%s: viðfang utan sviðs"
 msgid "%s: argument out of domain"
 msgstr "%s: viðfang utan skilgreiningarsviðs"
 
-msgid "invalid previous result %q"
-msgstr "ógilt fyrra svar %q"
-
 msgid "invalid number %q"
 msgstr "ógild tala %q"
 

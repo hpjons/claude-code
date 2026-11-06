@@ -12,16 +12,16 @@ import (
 type App struct {
 	ctx context.Context
 
-	// mu guards ans. Wails runs each bound-method call from the frontend on
-	// its own goroutine, so two quick submissions can call Evaluate
-	// concurrently.
-	mu  sync.Mutex
-	ans string
+	// mu guards session, which isn't safe for concurrent use. Wails runs
+	// each bound-method call from the frontend on its own goroutine, so two
+	// quick submissions can call Evaluate concurrently.
+	mu      sync.Mutex
+	session *engine.Session
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{}
+	return &App{session: engine.NewSession()}
 }
 
 // startup is called when the app starts. The context is saved
@@ -42,13 +42,10 @@ type EvaluationResult struct {
 // Evaluate parses and computes the given expression using the Phase 1
 // math engine and reports the outcome to the frontend.
 func (a *App) Evaluate(expression string) EvaluationResult {
-	// Hold the lock across the whole evaluation, not just the reads and
-	// writes of ans, so concurrent calls each see the previous call's
-	// result rather than racing on the same old ans.
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	result, err := engine.Evaluate(expression, a.ans)
+	result, err := a.session.Evaluate(expression)
 	if err != nil {
 		return EvaluationResult{
 			Input:    expression,
@@ -57,7 +54,6 @@ func (a *App) Evaluate(expression string) EvaluationResult {
 		}
 	}
 
-	a.ans = result
 	return EvaluationResult{
 		Input:  expression,
 		Result: result,

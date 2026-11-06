@@ -1,0 +1,83 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: is\n"
+
+# --- lexer.go ---
+
+msgid "unexpected character %q at position %d"
+msgstr "óvæntur stafur %q á stöðu %d"
+
+msgid "malformed number %q at position %d: multiple decimal points"
+msgstr "gölluð tala %q á stöðu %d: margir punktar"
+
+msgid "malformed number %q at position %d"
+msgstr "gölluð tala %q á stöðu %d"
+
+# --- parser.go ---
+
+msgid "unexpected token %q at position %d"
+msgstr "óvænt tákn %q á stöðu %d"
+
+msgid "missing closing parenthesis"
+msgstr "vantar lokandi sviga"
+
+msgid "unexpected end of expression"
+msgstr "óvænt endalok segðar"
+
+# --- evaluator.go ---
+
+msgid "%s: argument out of range"
+msgstr "%s: viðfang utan sviðs"
+
+msgid "%s: argument out of domain"
+msgstr "%s: viðfang utan skilgreiningarsviðs"
+
+msgid "invalid previous result %q"
+msgstr "ógilt fyrra svar %q"
+
+msgid "invalid number %q"
+msgstr "ógild tala %q"
+
+msgid "ans is not available yet"
+msgstr "ans er ekki tiltækt enn"
+
+msgid "unknown identifier %q"
+msgstr "óþekkt auðkenni %q"
+
+msgid "unknown function %q"
+msgstr "óþekkt fall %q"
+
+msgid "unsupported operator"
+msgstr "óstudd aðgerð"
+
+msgid "invalid expression"
+msgstr "ógild segð"
+
+# --- apd library condition strings (surfaced verbatim as Go error text) ---
+
+msgid "division by zero"
+msgstr "deilt með núlli"
+
+msgid "invalid operation"
+msgstr "ógild aðgerð"
+
+msgid "division undefined"
+msgstr "deiling óskilgreind"
+
+msgid "division impossible"
+msgstr "deiling ómöguleg"
+
+msgid "overflow"
+msgstr "yfirflæði"
+
+msgid "underflow"
+msgstr "undirflæði"
+
+msgid "subnormal"
+msgstr "undireðlilegt gildi"
+
+# --- frontend/src/main.js (via App.InputPlaceholder) ---
+
+msgid "type an expression, press Enter…"
+msgstr "sláðu inn segð, ýttu á Enter…"

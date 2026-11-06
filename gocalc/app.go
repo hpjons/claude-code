@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"sync"
 
 	"gocalc/engine"
 	"gocalc/i18n"
@@ -10,12 +11,17 @@ import (
 // App struct
 type App struct {
 	ctx context.Context
-	ans string
+
+	// mu guards session, which isn't safe for concurrent use. Wails runs
+	// each bound-method call from the frontend on its own goroutine, so two
+	// quick submissions can call Evaluate concurrently.
+	mu      sync.Mutex
+	session *engine.Session
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{}
+	return &App{session: engine.NewSession()}
 }
 
 // startup is called when the app starts. The context is saved
@@ -36,7 +42,10 @@ type EvaluationResult struct {
 // Evaluate parses and computes the given expression using the Phase 1
 // math engine and reports the outcome to the frontend.
 func (a *App) Evaluate(expression string) EvaluationResult {
-	result, err := engine.Evaluate(expression, a.ans)
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	result, err := a.session.Evaluate(expression)
 	if err != nil {
 		return EvaluationResult{
 			Input:    expression,
@@ -45,7 +54,6 @@ func (a *App) Evaluate(expression string) EvaluationResult {
 		}
 	}
 
-	a.ans = result
 	return EvaluationResult{
 		Input:  expression,
 		Result: result,
@@ -56,4 +64,18 @@ func (a *App) Evaluate(expression string) EvaluationResult {
 // bar, so the frontend never hardcodes English UI strings.
 func (a *App) InputPlaceholder() string {
 	return i18n.T("type an expression, press Enter…")
+}
+
+// Language returns the language tag of the UI strings (e.g. "en" or "is"),
+// so the frontend can set <html lang> to match.
+func (a *App) Language() string {
+	return i18n.Language()
+}
+
+// Reset forgets the previous result ("ans"), for the frontend's "clear"
+// command.
+func (a *App) Reset() {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.session.Reset()
 }

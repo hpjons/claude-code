@@ -12,6 +12,9 @@ type BinaryNode struct {
 	Right Node
 }
 
+// UnaryNode is a prefix operator applied to one operand. The parser only
+// produces TokenMinus (unary plus is dropped while parsing); eval rejects
+// any other Op rather than silently treating it as negation.
 type UnaryNode struct {
 	Op      TokenType
 	Operand Node

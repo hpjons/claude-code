@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"sync"
 
 	"gocalc/engine"
 	"gocalc/i18n"
@@ -10,6 +11,11 @@ import (
 // App struct
 type App struct {
 	ctx context.Context
+
+	// mu guards ans. Wails runs each bound-method call from the frontend on
+	// its own goroutine, so two quick submissions can call Evaluate
+	// concurrently.
+	mu  sync.Mutex
 	ans string
 }
 
@@ -36,6 +42,12 @@ type EvaluationResult struct {
 // Evaluate parses and computes the given expression using the Phase 1
 // math engine and reports the outcome to the frontend.
 func (a *App) Evaluate(expression string) EvaluationResult {
+	// Hold the lock across the whole evaluation, not just the reads and
+	// writes of ans, so concurrent calls each see the previous call's
+	// result rather than racing on the same old ans.
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
 	result, err := engine.Evaluate(expression, a.ans)
 	if err != nil {
 		return EvaluationResult{

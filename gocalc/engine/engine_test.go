@@ -309,3 +309,30 @@ func TestEvaluateLibraryErrorMessages(t *testing.T) {
 		}
 	}
 }
+
+func TestEvaluateZeroToNegativePower(t *testing.T) {
+	for _, expr := range []string{"0^-1", "0^-0.5", "0 ** -2", "(-0)^-1", "1 / (0^-1)", "-(0^-1)"} {
+		_, err := Evaluate(expr, "")
+		if err == nil {
+			t.Errorf("Evaluate(%q) expected an error, got nil", expr)
+			continue
+		}
+		if err.Error() != "division by zero" {
+			t.Errorf("Evaluate(%q) error = %q, want %q", expr, err.Error(), "division by zero")
+		}
+	}
+
+	// Zero to a positive power is still fine.
+	assertEvaluates(t, []struct{ expr, want string }{
+		{"0^2", "0"},
+		{"0^0.5", "0"},
+	})
+}
+
+func TestEvaluateRejectsNonFiniteAns(t *testing.T) {
+	for _, ans := range []string{"Infinity", "-Infinity", "NaN"} {
+		if _, err := Evaluate("ans + 1", ans); err == nil {
+			t.Errorf("Evaluate(%q) with ans=%q expected an error, got nil", "ans + 1", ans)
+		}
+	}
+}

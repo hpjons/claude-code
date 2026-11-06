@@ -142,7 +142,7 @@ func Evaluate(expression string, ans string) (string, error) {
 	var ansDecimal *apd.Decimal
 	if ans != "" {
 		ansDecimal, _, err = ctx.NewFromString(ans)
-		if err != nil {
+		if err != nil || ansDecimal.Form != apd.Finite {
 			return "", i18n.Errorf("invalid previous result %q", ans)
 		}
 	}
@@ -235,6 +235,13 @@ func eval(ctx *apd.Context, node Node, ans *apd.Decimal) (*apd.Decimal, error) {
 		case TokenPercent:
 			_, err = ctx.Rem(res, left, right)
 		case TokenCaret:
+			// apd follows the General Decimal Arithmetic spec, under which
+			// 0 to a negative power is Infinity with no condition raised,
+			// so no trap catches it. 0^-n = 1/0^n, so report it the same
+			// way as 1/0.
+			if left.IsZero() && right.Negative && !right.IsZero() {
+				return nil, i18n.Errorf("division by zero")
+			}
 			_, err = ctx.Pow(res, left, right)
 		default:
 			return nil, i18n.Errorf("unsupported operator")

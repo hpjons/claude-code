@@ -288,3 +288,24 @@ func TestEvaluateErrorMessages(t *testing.T) {
 		}
 	}
 }
+
+func TestEvaluateLibraryErrorMessages(t *testing.T) {
+	cases := []struct {
+		expr string
+		want string
+	}{
+		{"2^1000000", "exponent out of range"},
+		{"exp(-100000)", "underflow"},
+		{"1e99999 % 1e-99999", "exponent out of range"},
+	}
+	for _, c := range cases {
+		_, err := Evaluate(c.expr, "")
+		if err == nil {
+			t.Errorf("Evaluate(%q) expected an error, got nil", c.expr)
+			continue
+		}
+		if err.Error() != c.want {
+			t.Errorf("Evaluate(%q) error = %q, want %q", c.expr, err.Error(), c.want)
+		}
+	}
+}

@@ -80,6 +80,9 @@ msgstr "undirflæði"
 msgid "subnormal"
 msgstr "undireðlilegt gildi"
 
+msgid "exponent out of range"
+msgstr "veldisvísir utan sviðs"
+
 # --- frontend/src/main.js (via App.InputPlaceholder) ---
 
 msgid "type an expression, press Enter…"

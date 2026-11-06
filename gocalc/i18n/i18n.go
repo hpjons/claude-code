@@ -1,5 +1,5 @@
 // Package i18n provides translation for every user-facing string in the
-// app, backed by a single PO catalog (../locales/is.po). The PO file's
+// app, backed by a single PO catalog (locales/is.po, embedded below). The PO file's
 // msgid is always the English source text, used verbatim as the fallback
 // when no translation is loaded or a string isn't in the catalog — so
 // English never needs its own catalog file.
@@ -9,6 +9,7 @@ import (
 	_ "embed"
 	"errors"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/leonelquinteros/gotext"
@@ -59,31 +60,66 @@ func Errorf(msgid string, args ...interface{}) error {
 }
 
 // WrapErr translates a third-party error's message text — in practice,
-// one of apd's small fixed set of decimal-condition strings — passing it
-// through unchanged if it isn't one of those known, recognized messages.
-// The condition strings are matched against constant literals (rather
-// than looking up err.Error() directly) so each msgid stays a compile-time
-// constant for go vet's printf check.
+// one of apd's decimal-condition strings — passing the error through
+// unchanged if its message isn't made up entirely of known conditions.
+//
+// apd messages come in a few shapes, all handled here:
+//   - a single condition: "division by zero"
+//   - several conditions joined by ", ": "underflow, subnormal"
+//   - a condition prefixed with an internal operation name:
+//     "Rem: exponent out of range"
+//
+// The operation prefix is dropped, since it means nothing to a user, and
+// "subnormal" is dropped when "underflow" is present, because apd always
+// raises the two together and the second adds nothing.
 func WrapErr(err error) error {
 	if err == nil {
 		return nil
 	}
-	switch err.Error() {
+
+	msg := err.Error()
+	if i := strings.LastIndex(msg, ": "); i >= 0 {
+		msg = msg[i+2:]
+	}
+
+	conditions := strings.Split(msg, ", ")
+	if slices.Contains(conditions, "underflow") {
+		conditions = slices.DeleteFunc(conditions, func(c string) bool { return c == "subnormal" })
+	}
+
+	translated := make([]string, len(conditions))
+	for i, c := range conditions {
+		t, ok := translateCondition(c)
+		if !ok {
+			return err
+		}
+		translated[i] = t
+	}
+	return errors.New(strings.Join(translated, ", "))
+}
+
+// translateCondition translates one apd condition string. Each case calls
+// T with a constant literal (rather than T(c)) so every msgid stays a
+// compile-time constant for go vet's printf check.
+func translateCondition(c string) (string, bool) {
+	switch c {
 	case "division by zero":
-		return errors.New(T("division by zero"))
+		return T("division by zero"), true
 	case "invalid operation":
-		return errors.New(T("invalid operation"))
+		return T("invalid operation"), true
 	case "division undefined":
-		return errors.New(T("division undefined"))
+		return T("division undefined"), true
 	case "division impossible":
-		return errors.New(T("division impossible"))
+		return T("division impossible"), true
 	case "overflow":
-		return errors.New(T("overflow"))
+		return T("overflow"), true
 	case "underflow":
-		return errors.New(T("underflow"))
+		return T("underflow"), true
 	case "subnormal":
-		return errors.New(T("subnormal"))
+		return T("subnormal"), true
+	case "exponent out of range":
+		return T("exponent out of range"), true
 	default:
-		return err
+		return "", false
 	}
 }

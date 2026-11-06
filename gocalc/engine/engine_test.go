@@ -336,3 +336,24 @@ func TestEvaluateRejectsNonFiniteAns(t *testing.T) {
 		}
 	}
 }
+
+func TestEvalRejectsUnknownUnaryOperator(t *testing.T) {
+	node := &UnaryNode{Op: TokenStar, Operand: &NumberNode{Value: "2"}}
+	if _, err := eval(defaultContext(), node, nil); err == nil {
+		t.Error("eval of a unary '*' expected an error, got nil")
+	}
+}
+
+func TestEvalPiReturnsCopy(t *testing.T) {
+	want := pi.Text('f')
+
+	got, err := eval(defaultContext(), &IdentNode{Name: "pi"}, nil)
+	if err != nil {
+		t.Fatalf("eval(pi) returned error: %v", err)
+	}
+	got.SetInt64(0)
+
+	if pi.Text('f') != want {
+		t.Errorf("mutating eval's result changed the cached pi to %s", pi.Text('f'))
+	}
+}

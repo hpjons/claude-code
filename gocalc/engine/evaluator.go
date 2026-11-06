@@ -13,6 +13,16 @@ import (
 // rounded rather than truncated short.
 const piDigits = "3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798"
 
+// pi is piDigits rounded to defaultContext's precision, parsed once at
+// startup. eval hands out copies so no caller can mutate the shared value.
+var pi = func() *apd.Decimal {
+	d, _, err := defaultContext().NewFromString(piDigits)
+	if err != nil {
+		panic(err) // piDigits is a constant; this can't fail
+	}
+	return d
+}()
+
 // defaultContext returns a fresh decimal context with enough precision for
 // a calculator REPL, matching standard calculator rounding behavior.
 func defaultContext() *apd.Context {
@@ -167,11 +177,7 @@ func eval(ctx *apd.Context, node Node, ans *apd.Decimal) (*apd.Decimal, error) {
 	case *IdentNode:
 		switch n.Name {
 		case "pi":
-			d, _, err := ctx.NewFromString(piDigits)
-			if err != nil {
-				return nil, err
-			}
-			return d, nil
+			return new(apd.Decimal).Set(pi), nil
 		case "ans":
 			if ans == nil {
 				return nil, i18n.Errorf("ans is not available yet")
@@ -205,6 +211,9 @@ func eval(ctx *apd.Context, node Node, ans *apd.Decimal) (*apd.Decimal, error) {
 		operand, err := eval(ctx, n.Operand, ans)
 		if err != nil {
 			return nil, err
+		}
+		if n.Op != TokenMinus {
+			return nil, i18n.Errorf("unsupported operator")
 		}
 		res := new(apd.Decimal)
 		if _, err := ctx.Neg(res, operand); err != nil {

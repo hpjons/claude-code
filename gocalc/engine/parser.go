@@ -11,22 +11,22 @@ const (
 	precPow   = 4 // ^ (right-associative)
 )
 
-type Parser struct {
+type parser struct {
 	tokens []Token
 	pos    int
 }
 
-func NewParser(tokens []Token) *Parser {
-	return &Parser{tokens: tokens}
+func newParser(tokens []Token) *parser {
+	return &parser{tokens: tokens}
 }
 
 // Parse parses a full expression and ensures no trailing tokens remain.
 func Parse(input string) (Node, error) {
-	tokens, err := Tokenize(input)
+	tokens, err := tokenize(input)
 	if err != nil {
 		return nil, err
 	}
-	p := NewParser(tokens)
+	p := newParser(tokens)
 	node, err := p.parseExpression(precAdd)
 	if err != nil {
 		return nil, err
@@ -37,16 +37,31 @@ func Parse(input string) (Node, error) {
 	return node, nil
 }
 
-func (p *Parser) peek() Token {
+func (p *parser) peek() Token {
 	return p.tokens[p.pos]
 }
 
-func (p *Parser) advance() Token {
+func (p *parser) advance() Token {
 	tok := p.tokens[p.pos]
 	if p.pos < len(p.tokens)-1 {
 		p.pos++
 	}
 	return tok
+}
+
+// expectRParen consumes a closing parenthesis, or reports what was found
+// instead so the user can see which token broke the expression.
+func (p *parser) expectRParen() error {
+	tok := p.peek()
+	switch tok.Type {
+	case TokenRParen:
+		p.advance()
+		return nil
+	case TokenEOF:
+		return i18n.Errorf("missing closing parenthesis")
+	default:
+		return i18n.Errorf("expected ')' but found %q at position %d", tok.Value, tok.Pos)
+	}
 }
 
 func binaryInfo(t TokenType) (prec int, rightAssoc bool, ok bool) {
@@ -62,7 +77,7 @@ func binaryInfo(t TokenType) (prec int, rightAssoc bool, ok bool) {
 	}
 }
 
-func (p *Parser) parseExpression(minPrec int) (Node, error) {
+func (p *parser) parseExpression(minPrec int) (Node, error) {
 	left, err := p.parseUnary()
 	if err != nil {
 		return nil, err
@@ -91,7 +106,7 @@ func (p *Parser) parseExpression(minPrec int) (Node, error) {
 	return left, nil
 }
 
-func (p *Parser) parseUnary() (Node, error) {
+func (p *parser) parseUnary() (Node, error) {
 	tok := p.peek()
 	switch tok.Type {
 	case TokenMinus:
@@ -109,7 +124,7 @@ func (p *Parser) parseUnary() (Node, error) {
 	}
 }
 
-func (p *Parser) parsePrimary() (Node, error) {
+func (p *parser) parsePrimary() (Node, error) {
 	tok := p.peek()
 	switch tok.Type {
 	case TokenNumber:
@@ -121,10 +136,9 @@ func (p *Parser) parsePrimary() (Node, error) {
 		if err != nil {
 			return nil, err
 		}
-		if p.peek().Type != TokenRParen {
-			return nil, i18n.Errorf("missing closing parenthesis")
+		if err := p.expectRParen(); err != nil {
+			return nil, err
 		}
-		p.advance()
 		return inner, nil
 	case TokenIdent:
 		p.advance()
@@ -136,10 +150,9 @@ func (p *Parser) parsePrimary() (Node, error) {
 		if err != nil {
 			return nil, err
 		}
-		if p.peek().Type != TokenRParen {
-			return nil, i18n.Errorf("missing closing parenthesis")
+		if err := p.expectRParen(); err != nil {
+			return nil, err
 		}
-		p.advance()
 		return &CallNode{Name: tok.Value, Arg: arg}, nil
 	case TokenEOF:
 		return nil, i18n.Errorf("unexpected end of expression")

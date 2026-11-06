@@ -22,6 +22,9 @@ msgstr "óvænt tákn %q á stöðu %d"
 msgid "missing closing parenthesis"
 msgstr "vantar lokandi sviga"
 
+msgid "expected ')' but found %q at position %d"
+msgstr "bjóst við ')' en fann %q á stöðu %d"
+
 msgid "unexpected end of expression"
 msgstr "óvænt endalok segðar"
 
@@ -32,9 +35,6 @@ msgstr "%s: viðfang utan sviðs"
 
 msgid "%s: argument out of domain"
 msgstr "%s: viðfang utan skilgreiningarsviðs"
-
-msgid "invalid previous result %q"
-msgstr "ógilt fyrra svar %q"
 
 msgid "invalid number %q"
 msgstr "ógild tala %q"
@@ -76,6 +76,9 @@ msgstr "undirflæði"
 
 msgid "subnormal"
 msgstr "undireðlilegt gildi"
+
+msgid "exponent out of range"
+msgstr "veldisvísir utan sviðs"
 
 # --- frontend/src/main.js (via App.InputPlaceholder) ---
 

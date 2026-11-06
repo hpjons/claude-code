@@ -1,7 +1,11 @@
 const historyEl = document.getElementById('history');
 const inputEl = document.getElementById('expr-input');
 
-const ANS_TRIGGER_OPERATORS = ['+', '-', '*', '/', '^', '%'];
+// Typing one of these into an empty input prefixes it with "ans", so
+// "* 2" continues from the previous result. '-' is deliberately excluded:
+// a leading minus almost always starts a negative number (e.g. "-5 + 3"),
+// and "ans-…" can still be typed explicitly.
+const ANS_TRIGGER_OPERATORS = ['+', '*', '/', '^', '%'];
 
 let commandHistory = [];
 let historyPos = 0;
@@ -30,6 +34,28 @@ function appendEntry(res) {
     }
 }
 
+// Backend calls run one at a time, in the order they were made. Wails runs
+// each bound-method call on its own goroutine, so without this a quick
+// "5" then "clear" (or "2" then "ans * 3") could reach the backend out of
+// order and leave the wrong "ans". UI updates for each call happen inside
+// its queued step, so they stay in order too.
+let backendQueue = Promise.resolve();
+
+function enqueue(step) {
+    backendQueue = backendQueue.then(step).catch((err) => console.error(err));
+}
+
+function clearAll() {
+    // Stop auto-prefixing "ans" right away; the backend reset is queued
+    // behind any evaluations still in flight.
+    hasAns = false;
+    enqueue(async () => {
+        await window.go.main.App.Reset();
+        historyEl.innerHTML = '';
+        hasAns = false;
+    });
+}
+
 function submit() {
     const text = inputEl.value.trim();
     if (text === '') return;
@@ -40,13 +66,19 @@ function submit() {
     inputEl.value = '';
 
     if (text.toLowerCase() === 'clear') {
-        historyEl.innerHTML = '';
+        clearAll();
         return;
     }
 
-    window.go.main.App.Evaluate(text)
-        .then((res) => appendEntry(res))
-        .catch((err) => appendEntry({ input: text, isError: true, errorMsg: String(err) }));
+    enqueue(async () => {
+        let res;
+        try {
+            res = await window.go.main.App.Evaluate(text);
+        } catch (err) {
+            res = { input: text, isError: true, errorMsg: String(err) };
+        }
+        appendEntry(res);
+    });
 }
 
 function navigateHistory(delta) {
@@ -100,6 +132,14 @@ document.addEventListener('click', () => {
         inputEl.focus();
     }
 });
+
+// index.html ships with lang="en" and an English placeholder as fallbacks
+// until the backend reports the active language and translated text.
+window.go.main.App.Language()
+    .then((lang) => {
+        document.documentElement.lang = lang;
+    })
+    .catch(() => {});
 
 window.go.main.App.InputPlaceholder()
     .then((text) => {

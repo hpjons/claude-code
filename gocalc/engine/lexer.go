@@ -6,23 +6,23 @@ import (
 	"gocalc/i18n"
 )
 
-type Lexer struct {
+type lexer struct {
 	input []rune
 	pos   int
 }
 
-func NewLexer(input string) *Lexer {
-	return &Lexer{input: []rune(input)}
+func newLexer(input string) *lexer {
+	return &lexer{input: []rune(input)}
 }
 
-func (l *Lexer) peek() rune {
+func (l *lexer) peek() rune {
 	if l.pos >= len(l.input) {
 		return 0
 	}
 	return l.input[l.pos]
 }
 
-func (l *Lexer) Next() (Token, error) {
+func (l *lexer) next() (Token, error) {
 	for l.pos < len(l.input) && unicode.IsSpace(l.input[l.pos]) {
 		l.pos++
 	}
@@ -65,7 +65,7 @@ func (l *Lexer) Next() (Token, error) {
 		return Token{Type: TokenRParen, Value: ")", Pos: start}, nil
 	}
 
-	if unicode.IsDigit(c) || c == '.' {
+	if isDigit(c) || c == '.' {
 		return l.lexNumber(start)
 	}
 
@@ -76,13 +76,13 @@ func (l *Lexer) Next() (Token, error) {
 	return Token{}, i18n.Errorf("unexpected character %q at position %d", c, start)
 }
 
-func (l *Lexer) lexNumber(start int) (Token, error) {
+func (l *lexer) lexNumber(start int) (Token, error) {
 	sawDigit := false
 	sawDot := false
 
 	for l.pos < len(l.input) {
 		c := l.input[l.pos]
-		if unicode.IsDigit(c) {
+		if isDigit(c) {
 			sawDigit = true
 			l.pos++
 			continue
@@ -102,23 +102,45 @@ func (l *Lexer) lexNumber(start int) (Token, error) {
 		return Token{}, i18n.Errorf("malformed number %q at position %d", string(l.input[start:l.pos]), start)
 	}
 
+	// Optional exponent: e/E, optional sign, then at least one digit. If no
+	// digit follows, the 'e' is left alone so it lexes as an identifier.
+	if c := l.peek(); c == 'e' || c == 'E' {
+		i := l.pos + 1
+		if i < len(l.input) && (l.input[i] == '+' || l.input[i] == '-') {
+			i++
+		}
+		if i < len(l.input) && isDigit(l.input[i]) {
+			for i < len(l.input) && isDigit(l.input[i]) {
+				i++
+			}
+			l.pos = i
+		}
+	}
+
 	return Token{Type: TokenNumber, Value: string(l.input[start:l.pos]), Pos: start}, nil
 }
 
-func (l *Lexer) lexIdent(start int) (Token, error) {
-	for l.pos < len(l.input) && (unicode.IsLetter(l.input[l.pos]) || unicode.IsDigit(l.input[l.pos]) || l.input[l.pos] == '_') {
+// isDigit reports whether c is an ASCII decimal digit. unicode.IsDigit is
+// deliberately avoided: it accepts digits from other scripts (e.g. '٣'),
+// which the decimal library can't parse.
+func isDigit(c rune) bool {
+	return c >= '0' && c <= '9'
+}
+
+func (l *lexer) lexIdent(start int) (Token, error) {
+	for l.pos < len(l.input) && (unicode.IsLetter(l.input[l.pos]) || isDigit(l.input[l.pos]) || l.input[l.pos] == '_') {
 		l.pos++
 	}
 	return Token{Type: TokenIdent, Value: string(l.input[start:l.pos]), Pos: start}, nil
 }
 
-// Tokenize converts an input expression into a flat token stream, always
+// tokenize converts an input expression into a flat token stream, always
 // terminated by a TokenEOF.
-func Tokenize(input string) ([]Token, error) {
-	lexer := NewLexer(input)
+func tokenize(input string) ([]Token, error) {
+	l := newLexer(input)
 	var tokens []Token
 	for {
-		tok, err := lexer.Next()
+		tok, err := l.next()
 		if err != nil {
 			return nil, err
 		}

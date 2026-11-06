@@ -105,6 +105,14 @@ document.addEventListener('click', () => {
     }
 });
 
+// index.html ships with lang="en" and an English placeholder as fallbacks
+// until the backend reports the active language and translated text.
+window.go.main.App.Language()
+    .then((lang) => {
+        document.documentElement.lang = lang;
+    })
+    .catch(() => {});
+
 window.go.main.App.InputPlaceholder()
     .then((text) => {
         inputEl.placeholder = text;

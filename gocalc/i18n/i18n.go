@@ -43,6 +43,16 @@ func detectLocale() string {
 	return "en"
 }
 
+// Language returns the BCP 47 tag of the language T currently produces
+// text in: "is" when the Icelandic catalog is loaded, otherwise "en".
+// The frontend uses it to set <html lang>.
+func Language() string {
+	if catalog != nil {
+		return "is"
+	}
+	return "en"
+}
+
 // T translates msgid (English source text, using fmt verbs like %q/%s/%d
 // for any args) into the active locale, falling back to the formatted
 // English text if no translation is loaded or found.

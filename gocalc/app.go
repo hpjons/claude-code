@@ -65,3 +65,9 @@ func (a *App) Evaluate(expression string) EvaluationResult {
 func (a *App) InputPlaceholder() string {
 	return i18n.T("type an expression, press Enter…")
 }
+
+// Language returns the language tag of the UI strings (e.g. "en" or "is"),
+// so the frontend can set <html lang> to match.
+func (a *App) Language() string {
+	return i18n.Language()
+}

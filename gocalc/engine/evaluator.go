@@ -214,6 +214,12 @@ func eval(ctx *apd.Context, node Node, ans *apd.Decimal) (*apd.Decimal, error) {
 		case TokenSlash:
 			_, err = ctx.Quo(res, left, right)
 		case TokenPercent:
+			// Truncated remainder, as in Go and C (not floored, as in
+			// Python): the result has the sign of the left operand, so
+			// -5 % 3 = -2 and 5 % -3 = 2. Decimal operands work too
+			// (5.5 % 2 = 1.5). The integer quotient must fit in the
+			// context's precision, so e.g. 10^60 % 7 fails with
+			// "division impossible".
 			_, err = ctx.Rem(res, left, right)
 		case TokenCaret:
 			// apd follows the General Decimal Arithmetic spec, under which

@@ -388,3 +388,26 @@ func TestSessionAnsNotAliased(t *testing.T) {
 
 	runSession(t, s, []sessionStep{{expr: "ans", want: "5"}})
 }
+
+func TestEvaluateModuloSign(t *testing.T) {
+	// % is a truncated remainder: the result takes the sign of the left
+	// operand (as in Go and C, unlike Python's floored modulo).
+	assertEvaluates(t, []struct{ expr, want string }{
+		{"5 % 3", "2"},
+		{"-5 % 3", "-2"},
+		{"5 % -3", "2"},
+		{"-5 % -3", "-2"},
+		{"-6 % 3", "0"},
+		{"5.5 % 2", "1.5"},
+		{"-5.5 % 2", "-1.5"},
+		{"1e50 % 7", "2"},
+	})
+}
+
+func TestEvaluateModuloQuotientTooLarge(t *testing.T) {
+	// The integer quotient must fit in the 50-digit precision.
+	_, err := Evaluate("10^60 % 7")
+	if err == nil || err.Error() != "division impossible" {
+		t.Errorf("Evaluate(%q) error = %v, want %q", "10^60 % 7", err, "division impossible")
+	}
+}

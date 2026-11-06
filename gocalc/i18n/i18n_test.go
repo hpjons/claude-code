@@ -109,3 +109,16 @@ func TestWrapErrIcelandicShapes(t *testing.T) {
 		}
 	}
 }
+
+func TestLanguage(t *testing.T) {
+	catalog = nil
+	if got := Language(); got != "en" {
+		t.Errorf("Language() with no catalog = %q, want %q", got, "en")
+	}
+
+	catalog = loadIcelandicCatalog(t)
+	defer func() { catalog = nil }()
+	if got := Language(); got != "is" {
+		t.Errorf("Language() with the Icelandic catalog = %q, want %q", got, "is")
+	}
+}

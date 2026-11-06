@@ -16,6 +16,12 @@ func NewSession() *Session {
 	return &Session{}
 }
 
+// Reset forgets the previous result, so "ans" is unavailable until the
+// next successful evaluation.
+func (s *Session) Reset() {
+	s.ans = nil
+}
+
 // Evaluate parses and evaluates one expression, returning a clean,
 // human-readable decimal string. On success the result becomes the
 // session's "ans"; on error ans is left unchanged.

@@ -71,3 +71,11 @@ func (a *App) InputPlaceholder() string {
 func (a *App) Language() string {
 	return i18n.Language()
 }
+
+// Reset forgets the previous result ("ans"), for the frontend's "clear"
+// command.
+func (a *App) Reset() {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.session.Reset()
+}

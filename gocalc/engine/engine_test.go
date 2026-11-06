@@ -416,3 +416,25 @@ func TestEvaluateModuloLargeQuotient(t *testing.T) {
 		{"123456789e40 % 0.001", "0"},
 	})
 }
+
+func TestSessionReset(t *testing.T) {
+	s := NewSession()
+	runSession(t, s, []sessionStep{{expr: "5", want: "5"}})
+	s.Reset()
+	runSession(t, s, []sessionStep{
+		{expr: "ans", wantErr: true},
+		{expr: "2", want: "2"},
+		{expr: "ans + 1", want: "3"},
+	})
+}
+
+func TestEvaluateZeroToZero(t *testing.T) {
+	assertEvaluates(t, []struct{ expr, want string }{
+		{"0^0", "1"},
+		{"0 ** 0", "1"},
+		{"0.0 ^ 0.00", "1"},
+		{"(-0)^0", "1"},
+		{"-0^0", "-1"}, // unary minus binds looser than ^: -(0^0)
+		{"(1 - 1)^(2 - 2)", "1"},
+	})
+}

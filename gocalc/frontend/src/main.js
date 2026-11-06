@@ -34,6 +34,28 @@ function appendEntry(res) {
     }
 }
 
+// Backend calls run one at a time, in the order they were made. Wails runs
+// each bound-method call on its own goroutine, so without this a quick
+// "5" then "clear" (or "2" then "ans * 3") could reach the backend out of
+// order and leave the wrong "ans". UI updates for each call happen inside
+// its queued step, so they stay in order too.
+let backendQueue = Promise.resolve();
+
+function enqueue(step) {
+    backendQueue = backendQueue.then(step).catch((err) => console.error(err));
+}
+
+function clearAll() {
+    // Stop auto-prefixing "ans" right away; the backend reset is queued
+    // behind any evaluations still in flight.
+    hasAns = false;
+    enqueue(async () => {
+        await window.go.main.App.Reset();
+        historyEl.innerHTML = '';
+        hasAns = false;
+    });
+}
+
 function submit() {
     const text = inputEl.value.trim();
     if (text === '') return;
@@ -44,13 +66,19 @@ function submit() {
     inputEl.value = '';
 
     if (text.toLowerCase() === 'clear') {
-        historyEl.innerHTML = '';
+        clearAll();
         return;
     }
 
-    window.go.main.App.Evaluate(text)
-        .then((res) => appendEntry(res))
-        .catch((err) => appendEntry({ input: text, isError: true, errorMsg: String(err) }));
+    enqueue(async () => {
+        let res;
+        try {
+            res = await window.go.main.App.Evaluate(text);
+        } catch (err) {
+            res = { input: text, isError: true, errorMsg: String(err) };
+        }
+        appendEntry(res);
+    });
 }
 
 function navigateHistory(delta) {

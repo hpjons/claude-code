@@ -224,6 +224,12 @@ func eval(ctx *apd.Context, node Node, ans *apd.Decimal) (*apd.Decimal, error) {
 			if left.IsZero() && right.Negative && !right.IsZero() {
 				return nil, i18n.Errorf("division by zero")
 			}
+			// apd treats 0^0 as an invalid operation; like most
+			// calculators (and Go's math.Pow), use the convention 0^0 = 1.
+			if left.IsZero() && right.IsZero() {
+				res.SetInt64(1)
+				return res, nil
+			}
 			_, err = ctx.Pow(res, left, right)
 		default:
 			return nil, i18n.Errorf("unsupported operator")

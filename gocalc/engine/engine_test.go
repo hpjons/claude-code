@@ -322,7 +322,6 @@ func TestEvaluateLibraryErrorMessages(t *testing.T) {
 	}{
 		{"2^1000000", "exponent out of range"},
 		{"exp(-100000)", "underflow"},
-		{"1e99999 % 1e-99999", "exponent out of range"},
 	}
 	for _, c := range cases {
 		_, err := Evaluate(c.expr)
@@ -404,10 +403,16 @@ func TestEvaluateModuloSign(t *testing.T) {
 	})
 }
 
-func TestEvaluateModuloQuotientTooLarge(t *testing.T) {
-	// The integer quotient must fit in the 50-digit precision.
-	_, err := Evaluate("10^60 % 7")
-	if err == nil || err.Error() != "division impossible" {
-		t.Errorf("Evaluate(%q) error = %v, want %q", "10^60 % 7", err, "division impossible")
-	}
+func TestEvaluateModuloLargeQuotient(t *testing.T) {
+	// The integer quotient can have far more digits than the 50-digit
+	// precision; only the remainder has to fit, and it's computed exactly.
+	assertEvaluates(t, []struct{ expr, want string }{
+		{"10^60 % 7", "1"},
+		{"-10^60 % 7", "-1"},
+		{"10^60 % -7", "1"},
+		{"1e99999 % 7", "6"},
+		{"1e99999 % 1e-99999", "0"},
+		{"1e-99999 % 3", "1e-99999"},
+		{"123456789e40 % 0.001", "0"},
+	})
 }

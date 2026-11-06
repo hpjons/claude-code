@@ -2,6 +2,7 @@ package engine
 
 import (
 	"math"
+	"math/big"
 	"strconv"
 
 	"github.com/cockroachdb/apd/v3"
@@ -214,13 +215,7 @@ func eval(ctx *apd.Context, node Node, ans *apd.Decimal) (*apd.Decimal, error) {
 		case TokenSlash:
 			_, err = ctx.Quo(res, left, right)
 		case TokenPercent:
-			// Truncated remainder, as in Go and C (not floored, as in
-			// Python): the result has the sign of the left operand, so
-			// -5 % 3 = -2 and 5 % -3 = 2. Decimal operands work too
-			// (5.5 % 2 = 1.5). The integer quotient must fit in the
-			// context's precision, so e.g. 10^60 % 7 fails with
-			// "division impossible".
-			_, err = ctx.Rem(res, left, right)
+			err = remainder(ctx, res, left, right)
 		case TokenCaret:
 			// apd follows the General Decimal Arithmetic spec, under which
 			// 0 to a negative power is Infinity with no condition raised,
@@ -241,4 +236,48 @@ func eval(ctx *apd.Context, node Node, ans *apd.Decimal) (*apd.Decimal, error) {
 	default:
 		return nil, i18n.Errorf("invalid expression")
 	}
+}
+
+// remainder sets d to x % y: a truncated remainder, as in Go and C (not
+// floored, as in Python), so the result has the sign of x: -5 % 3 = -2
+// and 5 % -3 = 2. Decimal operands work too (5.5 % 2 = 1.5).
+//
+// apd's Rem implements the General Decimal Arithmetic "remainder", which
+// refuses whenever the integer quotient has more digits than the context
+// precision (10^60 % 7 fails with "division impossible"), and fails
+// outright when the operands' exponents are too far apart to align. Yet
+// the remainder itself is always smaller than |y|, so it fits; only the
+// quotient, which is thrown away, is large. So the remainder is computed
+// here exactly with big integers instead.
+//
+// Both operands are scaled to integers over their common exponent:
+// x = a*10^e, y = b*10^e, and x % y = (a rem b) * 10^e. Exponents are
+// bounded by apd.MaxExponent, so a and b have at most ~200,000 digits.
+func remainder(ctx *apd.Context, d, x, y *apd.Decimal) error {
+	if y.IsZero() || x.Form != apd.Finite || y.Form != apd.Finite {
+		// Let apd report its usual conditions (e.g. 5 % 0 is an invalid
+		// operation and 0 % 0 is division undefined).
+		_, err := ctx.Rem(d, x, y)
+		return err
+	}
+
+	e := min(x.Exponent, y.Exponent)
+	a := scaledCoefficient(x, int64(x.Exponent)-int64(e))
+	b := scaledCoefficient(y, int64(y.Exponent)-int64(e))
+
+	d.Coeff.SetMathBigInt(a.Rem(a, b))
+	d.Exponent = e
+	d.Negative = x.Negative
+	d.Form = apd.Finite
+	_, err := ctx.Round(d, d)
+	return err
+}
+
+// scaledCoefficient returns |coefficient of x| * 10^shift.
+func scaledCoefficient(x *apd.Decimal, shift int64) *big.Int {
+	c := x.Coeff.MathBigInt()
+	if shift > 0 {
+		c.Mul(c, new(big.Int).Exp(big.NewInt(10), big.NewInt(shift), nil))
+	}
+	return c.Abs(c)
 }

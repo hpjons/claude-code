@@ -6,8 +6,9 @@ LDFLAGS := -s -w -X golog/internal/server.Version=$(VERSION)
 
 all: build
 
-web/node_modules: web/package.json
-	cd web && npm install --no-fund --no-audit
+# npm ci installs exactly what package-lock.json lists and never rewrites it.
+web/node_modules: web/package.json web/package-lock.json
+	cd web && npm ci --no-fund --no-audit
 	touch web/node_modules
 
 web: web/node_modules
@@ -55,10 +56,13 @@ release: notices
 	  CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch go build -trimpath -ldflags '$(RELEASE_LDFLAGS)' -o dist/$$dir/$$exe .; \
 	  sed 's/{{VERSION}}/$(RELEASE)/' packaging/README.txt > dist/$$dir/README.txt; \
 	  cp LICENSE dist/$$dir/LICENSE.txt; cp web/public/notices.txt dist/$$dir/NOTICES.txt; \
-	  if [ $$os = windows ]; then sed -i 's/$$/\r/' dist/$$dir/*.txt; fi; \
+	  if [ $$os = windows ]; then for f in dist/$$dir/*.txt; do \
+	    awk '{ printf "%s\r\n", $$0 }' "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; done; fi; \
 	  if [ $$os = linux ]; then tar -C dist -czf dist/$$dir.tar.gz $$dir; else (cd dist && zip -qr $$dir.zip $$dir); fi; \
 	done
-	cd dist && sha256sum *.zip *.tar.gz > SHA256SUMS.txt
+	@# sha256sum on Linux, shasum on macOS; both write the same format.
+	cd dist && if command -v sha256sum >/dev/null; then sha256sum *.zip *.tar.gz; \
+	  else shasum -a 256 *.zip *.tar.gz; fi > SHA256SUMS.txt
 	@ls -l dist/*.zip dist/*.tar.gz
 
 clean:

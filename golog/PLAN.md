@@ -9,7 +9,7 @@ code. It can import SedLog files so existing logs aren't lost.
 
 SedLog 3.1 runs on Java 25 (needs the full `java-25-openjdk`, not just the headless package).
 It was driven by a small helper (`docs/original/Drive.java`) that clicks its menus from code.
-Screenshots are in `docs/original/`.
+Screenshots are in `docs/original/` (kept locally, not in the repository).
 
 | Area | Findings |
 |---|---|
@@ -94,7 +94,7 @@ in one place only (the TypeScript renderer), so screen, PDF, SVG and print alway
 
 | Part | Choice | Why |
 |---|---|---|
-| Backend language | **Go** (1.25+) | One executable per OS (Windows/macOS/Linux, cross-compiled), no runtime to install, fast, easy to deploy on a server |
+| Backend language | **Go** (1.26+) | One executable per OS (Windows/macOS/Linux, cross-compiled), no runtime to install, fast, easy to deploy on a server |
 | HTTP | Standard library `net/http` (method + path routing) | No framework needed |
 | Database | SQLite via `modernc.org/sqlite` (pure Go, no C compiler) | One file per installation; easy backup; enough for a school |
 | Web app inside the binary | `go:embed` | The executable *is* the whole app |

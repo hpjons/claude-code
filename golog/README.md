@@ -89,7 +89,7 @@ the columns and scale from a template. The format is described in
 
 ## Build
 
-Needs Go 1.25+ and Node 20+.
+Needs Go 1.26+ and Node 20+.
 
 ```bash
 make           # builds ./golog for this computer (web app included)
@@ -118,7 +118,6 @@ make dev       # live-reloading web app on http://localhost:5173 (run ./golog -n
 | `web/public/guide.html` | The user guide |
 | `packaging/` | README for the release packages |
 | `web/scripts/notices.mjs` | Writes `web/public/notices.txt`, GoLog's licence and those of the libraries built into it (`make notices`) |
-| `docs/original/` | Screenshots of SedLog 3.1 for reference |
 
 ## What a log holds
 
